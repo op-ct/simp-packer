@@ -1,22 +1,26 @@
 DAY MON DD YYYY Chris Tessmer <chris.tessmer@onyxpoint.com> - UNRELEASED
 
 * Added:
+  - New rake task: `simp:packer:build`
   - New Rake task: `packer:validate`
-  - New `Simp::Packer::Publish::LocalDirTree.publish`
-  - Matrix logs include iteration report
+  - Initial Unit tests for Ruby code
   - Matrix `encryption=on` automatically adds 2 minutes to `big_sleep`
-  - Initial Ruby Unit tests
+  - Each matrix log now includes information about its iteration
+  - New `Simp::Packer::Publish::LocalDirTree.publish`
 
 * Changed:
   - Use Puppet 5 Hiera data paths (unless the version of SIMP is less than
     6.3.0)
+  - Refactored `simp_config.rb` and `simp_packer_test.sh` into Ruby under `lib/`
+  - Matrix builds stop on `packer build` failures
   - Fixed `VBoxManage hostonlyif ipconfig` logic
-  - Matrix builds stop on failures in `simp_packer_test.sh`
   - Forced environment in `scripts/puppet-usersetup.sh` to permit `vagrant`
     sudo access on boxes that don't run `scripts/simp-bootstrap.sh`
   - Add a longer `big_sleep` by default for centos 6 + 7
   - Renamed `rake vagrant:boxname` to `rake vagrant:json`
-  - Refactored `simp_config.rb` and `simp_packer_test.sh` into code under `lib/`
+
+* Removed:
+  - Scripts: `simp_packer_test.sh` and `simp_config.rb`
 
 Mon Oct 02 2018 Chris Tessmer <chris.tessmer@onyxpoint.com> - 2.2.2
 
