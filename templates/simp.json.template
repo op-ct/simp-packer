@@ -304,7 +304,7 @@
       "ignore_exit_codes": true,
       "extra_arguments": "--test",
       "staging_dir": "/var/local/simp/scripts",
-      "puppet_bin_dir": "/opt/puppetlabs/bin"
+      "puppet_bin_dir": "/opt/puppetlabs/puppet/bin"
     },
 
     // Run puppet again to get closer to a clean run (take 2)
@@ -313,7 +313,7 @@
       "ignore_exit_codes": true,
       "extra_arguments": "--test",
       "staging_dir": "/var/local/simp/scripts",
-      "puppet_bin_dir": "/opt/puppetlabs/bin"
+      "puppet_bin_dir": "/opt/puppetlabs/puppet/bin"
     },
 
     // Grant all uploaded scripts premission to execute on the server
@@ -362,7 +362,7 @@
       "type": "puppet-server",
       "ignore_exit_codes": true,
       "extra_arguments": "--test",
-      "puppet_bin_dir": "/opt/puppetlabs/bin"
+      "puppet_bin_dir": "/opt/puppetlabs/puppet/bin"
     },
 
     // Add some shortcuts to root's .bashrc (to help get around)
@@ -373,9 +373,9 @@
       "inline" : [
         "if [ -f /var/local/simp/root/.bashrc-extras ]; then",
           "cat /var/local/simp/root/.bashrc-extras >> /root/.bashrc",
-        "fi",
-        "if [[ \"$(cat /etc/simp/simp.version)\" =~ ^6\\.[12]\\. ]]; then",
-          "sed -i -e 's@/data$@/hieradata@' /root/.bashrc",
+          "source /var/local/simp/scripts/inc/simp-info-utils.inc.sh",
+          "hiera_dir=\"$(basename \"$(simp_hieradata_path)\")\"",
+          "sed -i -e \"s@/data$@/${hiera_dir}@\" /root/.bashrc",
         "fi"
       ]
     },

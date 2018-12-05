@@ -1,22 +1,10 @@
 #!/bin/sh
-#  Because this script is used before the reboot the path is not
-#  set for simp user so I add this to the end
-#  incase it is Puppet 4.0
-export PATH="${PATH}:/opt/puppetlabs/bin"
 
-pupenvdir=$(puppet config print environmentpath)
-hieradata_dir="${pupenvdir}/simp/data"
+source '/var/local/simp/inc/simp-info-utils.inc.sh'
+hieradata_dir="$(simp_hieradata_path)"
+pupenvdir="$(puppet_env_path)"
 
-simp_version="$(cat /etc/simp/simp.version)"
-semver=( ${simp_version//./ } )
-major="${semver[0]}"
-minor="${semver[1]}"
-
-# Use old hieradata path when SIMP < 6.3.0
-if [[ ( "$major" -eq 6  &&  "$minor" -lt 3 ) || "$major" -le 5 ]]; then
-  hieradata_dir="$pupenvdir/simp/hieradata"
-  sed -i -e 's@/data$@/hieradata@g' /root/.bashrc-extras
-fi
+sed -i -e 's@/data$@/hieradata@g' /root/.bashrc-extras
 
 echo "The puppet environment directory is: $pupenvdir"
 echo "The hiera data directory is: $hieradata_dir"
@@ -81,8 +69,10 @@ classes:
 
 # enable root login over ssh
 ssh::server::conf::permitrootlogin: true
+
 # change the default authorized keys file to the users local dir for vagrant
 ssh::server::conf::authorizedkeysfile: .ssh/authorized_keys
+
 simplib::resolv::option_rotate: false
 EOF
 

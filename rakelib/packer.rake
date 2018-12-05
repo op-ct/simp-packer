@@ -27,13 +27,21 @@ namespace :packer do
     #       important to use the same code.
     text = File.read(json).gsub(%r{^\s*//.*(?:\r|\n)?}, '')
     require 'tmpdir'
+    cwd = Dir.pwd
     Dir.mktmpdir 'simp-packer-validate' do |dir|
       simp_json = File.join(dir, 'simp.json')
       File.open(simp_json, 'w') { |f| f.puts text }
       extra_args = "-var 'iso_url=#{dir}' -var 'iso_checksum_type=sha256' -var 'iso_checksum=x'"
       extra_args = "-var-file '#{args.vars_file}'" if args.vars_file
       sh 'packer --version'
+      begin
       sh "packer validate #{extra_args} '#{simp_json}'"
+      rescue RuntimeError => e
+        # copy failed file so line numbers make sense
+        failed_file = 'simp.FAILED.json'
+        cp simp_json, File.join(cwd, failed_file)
+        warn "(copied failed json to '#{failed_file}')"
+      end
     end
   end
 end
