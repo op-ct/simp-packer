@@ -2,6 +2,161 @@ require 'fileutils'
 require 'json'
 
 module Simp
+  module Vagrant
+    module DirTree
+      class Root
+        def initialize(base_dir, opts={})
+          @base_dir = base_dir
+          @opts = opts.dup
+          @data = { orgs: {}, invalid_orgs: [], base_path: @base_dir }
+        end
+
+        # Build tree based on box .json files
+        def scan
+          Dir["#{@base_dir}/*"].each do |org_path|
+            org = File.basename(org_path)
+            boxes_path = File.join(org_path, 'boxes')
+            unless File.directory?(boxes_path)
+              @data[:invalid_orgs] << org
+              next
+            end
+            @data[:orgs][org] = {:boxes => Boxes.new(boxes_path, @opts)}
+            h = @data[:orgs]['simpci'][:boxes].to_h
+            validate!
+          end
+          self
+        end
+
+        # rebuild top-level box data (JSON files)
+        # TODO: implement
+        def rebuild
+          raise 'not implemented'
+        end
+
+        def validate!
+          @data[:orgs].each do |name,org|
+            org[:boxes].validate!
+          end
+        end
+
+        def to_h
+          @data.select{|k,v| k != :orgs}.merge({
+           :orgs => @data[:orgs].map do |name,org|
+             [name, {boxes: org[:boxes].to_h}]
+            end
+          })
+        end
+      end
+
+      class Boxes
+        attr_reader :boxes, :path, :toplevel_json_files
+        def initialize(boxes_path, opts={})
+          @path = boxes_path
+          @boxes = {}
+          @opts = opts.dup
+          scan
+        end
+
+        # - [x] scan directory for JSON
+        # - [x] load from JSON
+        # - [ ] TODO: identify json with missing boxes
+        # - [ ] TODO: identify boxes with missing top-level json
+        def scan
+          @toplevel_json_files = Dir["#{@path}/*.json"]
+          @toplevel_json_files.each do |box_json|
+            box = Box.new(box_json)
+            @boxes[box.data['name']] = box
+          end
+        end
+
+        # rebuild top-level box data (JSON files)
+        # TODO: implement
+        def rebuild
+          raise 'not implemented'
+        end
+
+        def validate!
+          @boxes.each{|k,v| v.validate!}
+        end
+
+        def to_h
+          Hash[@boxes.map{ |name,box| [name, box.to_h] }]
+        end
+      end
+
+      class Box
+        attr_reader :data, :versions
+        def initialize(box_json, opts={})
+          @data = JSON.parse(File.read(box_json))
+          @opts = opts.dup
+          @versions = @data['versions'].map { |v| Version.new(v,@opts) }
+        end
+
+        def validate!
+          @versions.each(&:validate!)
+        end
+
+        def to_h
+          @data.merge({
+            'versions' => Hash[@versions.map{ |v| [v.data['version'], v.to_h] }]
+          })
+        end
+      end
+
+      class Version
+        attr_reader :data, :providers
+        def initialize(data, opts={})
+          @data = data.dup
+          @opts = opts.dup
+          providers = @data['providers']
+          unless @opts.fetch(:providers,[]).empty?
+            providers = @data['providers'].select{|x| @opts[:providers].include?(x['name'])}
+          end
+          @providers = providers.map do |p|
+            Provider.new(p, opts)
+          end
+        end
+        def validate!
+          @providers.each(&:validate!)
+        end
+        def to_h
+          @data.merge({
+            'providers' => @providers.map(&:to_h)
+          })
+        end
+      end
+
+      class Provider
+        def initialize(data, opts={})
+          @data = data.dup
+          @opts = opts.dup
+          @file = @data['url'].sub(%r{^file://},'')
+        end
+
+        def exists?
+          File.exists? @file
+        end
+
+        def checksum
+          warn "Calculating sha256sum of '#{@file}'..."
+          require 'digest'
+          Digest::SHA256.file(@file).hexdigest
+        end
+
+        def validate!
+          @data['exists'] = exists?
+          puts "VERBOSE: Provider x (#{@file})"  if @opts['verbose']
+        end
+
+        def to_h
+          @data.to_h
+        end
+      end
+    end
+  end
+end
+
+module Simp
   module Packer
     module Publish
       # Create and manage a local (atlus-like) directory tree for vagrant boxes
@@ -45,37 +200,56 @@ module Simp
           @verbose  = ((ENV['SIMP_PACKER_verbose'] || 'no') == 'yes')
         end
 
+        # scan a tree
+        #
+        # sort_by:
+        #   - [x] :name
+        #   - [x] :updated
+        #   - [x] :versions
+        #   - [x] :reverse_sort
+        # TODO: filter_by:
+        #
         # @return [Array] list of boxes
-        def list
-          data = { orgs: {}, invalid_orgs: [], base_path: @base_dir }
-          Dir["#{@base_dir}/*"].each do |org_path|
-            org = File.basename(org_path)
-            unless File.directory?(File.join(org_path, 'boxes'))
-              data[:invalid_orgs] << org
-              next
+        def list(opts={providers: []})
+          root = Simp::Vagrant::DirTree::Root.new(@base_dir,opts)
+          root.scan
+          tree = root.to_h
+          opts = {
+            sort_by: :name,
+            reverse_sort: true,
+          }.merge(opts)
+          mod = opts[:reverse_sort] ? -1 : 1
+          Hash[tree[:orgs].map do |org,data|
+            if(opts[:sort_by] == :name)
+              sorted_boxes = Hash[data[:boxes].sort do |a,b|
+                (a[1]['name'] <=> b[1]['name']) * mod
+              end ]
+            elsif(opts[:sort_by] == :updated)
+              sorted_boxes = Hash[data[:boxes].sort do |a,b|
+                aa = a[1]['versions'].map{|k,v| v['updated_at']}
+                bb = b[1]['versions'].map{|k,v| v['updated_at']}
+                (aa <=> bb) * mod
+              end ]
+            elsif(opts[:sort_by] == :versions)
+              sorted_boxes = Hash[data[:boxes].sort do |a,b|
+                (a[1]['versions'].size <=> bb = b[1]['versions'].size) * mod
+              end ]
             end
-            data[:orgs][org] = {}
-            data[:orgs][org][:boxes] = {}
-            Dir.chdir File.join(org_path, 'boxes') do |_dir|
-              data[:orgs][org][:toplevel_json_files] = Dir['*.json']
-              Dir['*/versions/*'].each do |version_path|
-                box = File.dirname(File.dirname(version_path))
-                version = File.basename(version_path)
-                data[:orgs][org][:boxes][box] ||= { versions: [] }
-                data[:orgs][org][:boxes][box][:versions] << version
-              end
-            end
+            [org,data]
           end
-          data
+          ]
         end
 
-        def list_str
+        def list_str( opts={} )
+          tree=list
           lines = []
-          list[:orgs].map do |org, v|
+          tree.map do |org, v|
             lines << "#{org}/"
             v[:boxes].map do |box, y|
               lines << "  - #{box}:"
-              lines << y[:versions].map { |version| "    - #{version}" }.sort.join("\n")
+              lines << y['versions'].map do |version,vdata|
+                "    - #{version}"
+              end.sort.join("\n")
             end
           end
           lines.join("\n")
