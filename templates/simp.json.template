@@ -3,7 +3,7 @@
   "__": "  that requires a fully working puppet server.                       ",
   "__": "                                                                     ",
   "__": " USAGE:                                                              ",
-  "__": "   `packer build -var-file=vars.json simp.json`              ",
+  "__": "   `packer build -var-file=vars.json simp.json`                      ",
   "__": "                                                                     ",
   "__": " NOTES:                                                              ",
   "__": "   - You should not need change this file.                           ",
@@ -21,14 +21,14 @@
   //
   "variables" : {
     "vagrant_password": "vagrant",
-    "simp_conf_file": "/var/local/simp/files/simp_conf.yaml",
-    "ruby_path": "/opt/puppetlabs/puppet/bin/ruby",
+    "simp_conf_file":   "/var/local/simp/files/simp_conf.yaml",
+    "ruby_path":        "/opt/puppetlabs/puppet/bin/ruby",
+    "vrdp_bind_address": "0.0.0.0",
     // NOTE: Uncomment this variable and the "ssh_private_key_file" below
     //       to inject a known ssh key during provisioning.  This is useful
     //       to log in and troubleshoot VMs as they are provisioining
     // "ssh_private_key_file": "/home/ctessmer/.ssh/vagrant.key",
-    "ssh_agent_auth": "true",
-    "vrdp_bind_address": "0.0.0.0"
+    "ssh_agent_auth":    "true"
   },
 
   //
@@ -106,9 +106,7 @@
         "<wait5>",
         // configure NAT interface
         "sed -i -e 's/ONBOOT=no/ONBOOT=yes/g' -e 's/DEFROUTE=yes/DEFROUTE=no/g' /etc/sysconfig/network-scripts/ifcfg-{{user `nat_interface`}}<enter>",
-        "<wait5>",
-        //"grep NM_CONTROLLED /etc/sysconfig/network-scripts/ifcfg-{{user `nat_interface`}} || echo NM_CONTROLLED=no >> /etc/sysconfig/network-scripts/ifcfg-{{user `nat_interface`}}<enter>",
-        "<wait5>",
+        "<wait5><wait>",
         // bring up NAT interface
         "ifup {{user `nat_interface`}}<enter>",
         "<wait5>",
@@ -223,7 +221,7 @@
       "inline" : [
          // SIMP-4482 workaround when building SIMP 6.1.0 boxes
          "[[ \"$(cat /etc/simp/simp.version)\" =~ ^6\\.1\\.0- ]] && { echo \"SIMP-4482 workaround: umask 0022\"; umask 0022; }",
-         "echo 'umask:'",
+         "echo 'umask:' ; umask",
          "umask",
          "echo 'Running simp config...'",
          "simp config -a {{user `simp_conf_file`}}"
@@ -246,10 +244,9 @@
     // TODO: Move `site::vagrant` out of the bash script heredoc and into its
     //       own file.
     {
-     "type": "shell",
-      "remote_path": "/var/local/simp/scripts/simp-bootstrap.sh",
-      "execute_command": "sudo chmod +x {{.Path}}; {{.Vars}} sudo -i '{{.Path}}'",
-      "script" : "scripts/simp-bootstrap.sh"
+      "type": "shell",
+      "remote_path": "/var/local/simp/scripts/inline-simp-bootstrap.sh",
+      "inline": [ "sudo -i /var/local/simp/scripts/simp-bootstrap.sh" ]
     },
 
     // Reboot the system.
@@ -330,8 +327,9 @@
     // execute_command for executing a ruby script
     {
       "type": "shell",
-      "remote_path": "/var/local/simp/scripts/inline-run-check_settings-sh.sh",
-      "inline": ["sudo sh /var/local/simp/scripts/tests/check_settings.sh"]
+      "remote_path": "/var/local/simp/scripts/inline-run-check_settings-rb.sh",
+// "inline": ["sudo sh /var/local/simp/scripts/tests/check_settings.sh"]
+      "inline": ["sudo -i {{user `ruby_path`}} /var/local/simp/scripts/tests/check_settings.rb /var/local/simp/files/simp_conf.yaml"]
     },
 
     ////////////////////////////////////////////////////////////////////////////
@@ -365,17 +363,13 @@
       "puppet_bin_dir": "/opt/puppetlabs/puppet/bin"
     },
 
-    // Add some shortcuts to root's .bashrc (to help get around)
     {
       "type": "shell",
       "remote_path": "/var/local/simp/inline-bashrc-extras.sh",
       "execute_command": "sudo chmod +x {{.Path}}; {{.Vars}} sudo bash '{{.Path}}'",
       "inline" : [
-        "if [ -f /var/local/simp/root/.bashrc-extras ]; then",
-          "cat /var/local/simp/root/.bashrc-extras >> /root/.bashrc",
-          "source /var/local/simp/scripts/inc/simp-info-utils.inc.sh",
-          "hiera_dir=\"$(basename \"$(simp_hieradata_path)\")\"",
-          "sed -i -e \"s@/data$@/${hiera_dir}@\" /root/.bashrc",
+        "if [ -f /root/.bashrc-extras ]; then",
+          "cat /root/.bashrc-extras >> /root/.bashrc",
         "fi"
       ]
     },
