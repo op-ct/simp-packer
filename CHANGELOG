@@ -1,17 +1,20 @@
 day mmm DD YYYY Chris Tessmer <chris.tessmer@onyxpoint.com> - UNRELEASED
 
-This patch refactors the `simp_packer_test.sh` and `simp_config.rb` scripts
-into testable Ruby classes, and adds a few example unit tests.
-
+This patch refactors the top-level one-scripts into testable Ruby classes, and
+adds a few example unit tests.  All packer builds are now started from Rake
+tasks (see the README.md for examples).
 
 * Added:
   - New rake task: `simp:packer:build`
   - New Rake task: `packer:validate`
+  - New ENV var: `SIMP_PACKER_big_sleep`
+  - New ENV var: `SIMP_PACKER_matrix_label`
   - Initial Ruby Unit tests
   - Each matrix log now includes information about its iteration
 * Changed:
   - Fixed `VBoxManage hostonlyif ipconfig` logic
-  - Refactored `simp_config.rb` and `simp_packer_test.sh` into code under `lib/`
+  - Refactored `simp_config.rb` and `simp_packer_test.sh` into testable code
+    under `lib/`
 * Removed:
   - Scripts: `simp_packer_test.sh` and `simp_config.rb`
 

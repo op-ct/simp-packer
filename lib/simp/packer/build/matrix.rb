@@ -46,7 +46,7 @@ module Simp
           list
         end
 
-        def run(label = (ENV['MATRIX_LABEL'] || 'build') + Time.now.utc.strftime('_%Y%m%d_%H%M%S'))
+        def run(label = (ENV['SIMP_PACKER_matrix_label'] || 'build') + Time.now.utc.strftime('_%Y%m%d_%H%M%S'))
           iteration_total = @iterations.size
           iteration_number = 0
           @iterations.each do |cfg|

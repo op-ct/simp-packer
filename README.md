@@ -85,8 +85,8 @@ There are two ways to run simp-packer:
 1. [Using `rake simp:packer:matrix`](#using-rake-simppackermatrix)
 
    - Builds multiple Vagrant boxes based on a matrix of settings.
-   - Publishes each box plus JSON files with **_versioned_** metadata to
-     a local directory tree.
+   - Publishes each Vagrant box with **_versioned_** metadata (as JSON files)
+     to a local directory tree.
      - Beaker, `Vagrantfile`s, and `vagrant init` can use this JSON metadata to
        request specific boxes and alert when a new version of a box is
        available.
@@ -102,8 +102,9 @@ and Rake task arguments.
 
 ### Using `rake simp:packer:matrix`
 
-Often, it is desirable to build several 'flavors' of simp-packer boxes at the
-same time. A rake task, `simp:packer:matrix` has been provided for this purpose:
+It's common to build many variations of SIMP boxes at once, in order to run
+integration tests under each condition. The rake task `simp:packer:matrix` has
+been provided for this purpose:
 
 ```sh
 TMPDIR=/some/tmp/dir \
@@ -115,7 +116,7 @@ A typical example would look like:
 
 ```sh
 TMPDIR="$PWD/tmp" \
-  MATRIX_LABEL=build_6.2.0RC1_ \
+  SIMP_PACKER_matrix_label=build_6.2.0RC1_ \
   VAGRANT_BOX_DIR="$PATH_TO_VAGRANT_BOX_TREE" \
   SIMP_ISO_JSON_FILES='${PATH_TO_ISO_JSON_FILES}/SIMP-6.2.0-0.el*.json' \
   bundle exec rake simp:packer:matrix[os=el6:el7,fips=on:off]
@@ -161,9 +162,11 @@ Build matrix elements are delimited by colons (`:`)
 
 | Environment variable  | Description                     |
 | --------------------- | ------------------------------- |
+| [**`TMPDIR`**][TMPDIR]        | This is a POSIX environment variable that is often **critical to set** when running packer: the directory _must_ be able to store over 4GB as each box is being built.  The default location is `/tmp`, which on many systems is unable to store that much data. |
 | `VAGRANT_BOX_DIR`     | Path to top of Vagrant box tree |
 | `SIMP_ISO_JSON_FILES` | List of absolute paths/globs to SIMP ISO `.json` files to consider (delimiters: `:`, `,`).  This variable can be used as an alternative to the matrix entry `json=`.  Non-existent paths will be discarded with a warning message |
-| `MATRIX_LABEL`        | Label for this matrix run that will prefix each iteration's directory name (default: `build_<YYYYmmdd>_<HHMMSS>`) |
+| `SIMP_PACKER_matrix_label`        | Label for this matrix run that will prefix each iteration's directory name (default: `build_<YYYYmmdd>_<HHMMSS>`) |
+| `SIMP_PACKER_big_sleep`    | Extra time to wait after installing the OS before packer attemps to log into the console.  Accepts number of seconds or a customized string of any combination of `<wait(10|5|)>` directives.  (default: 60 seconds) |
 
 
 ### Using `rake simp:packer:build`
@@ -179,6 +182,9 @@ TMPDIR=/some/tmp/dir \
 - `packer` uses around twice the space of the virtual image footprint when
   building, so ensure that `TMPDIR` has sufficient space.  `TMPDIR` defaults to
   `/tmp` which is not (usually) large enough.
+- For full documentation on each task argument, run:
+
+        bundle exec rake -D simp:packer:
 
 
 #### Manually creating the configuration files

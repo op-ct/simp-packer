@@ -91,6 +91,27 @@ module Simp
             sanitized['disk_encrypt'] = ''
           end
 
+          if sanitized['big_sleep'] = ENV['SIMP_PACKER_big_sleep']
+            if sanitized['big_sleep'].to_i > 0
+              left = sanitized['big_sleep'].to_i
+              sanitized['big_sleep'] = '<wait10>' * (left/10)
+              left -= (left/10)
+              sanitized['big_sleep'] += '<wait5>' * (left/5)
+              left -= (left/5)
+              sanitized['big_sleep'] += '<wait>' * (left)
+            end
+            unless sanitized['big_sleep'] =~  /\A(<wait(?:10|5|)>)+\Z/
+              raise %q[ERROR = ENV['SIMP_PACKER_big_sleep'] not a number ] + \
+                "or '<wait*>' string: '#{ENV['SIMP_PACKER_big_sleep']}'"
+            end
+          else
+            sanitized['big_sleep'] = settings['big_sleep'] \
+              || '<wait10><wait10><wait10><wait10><wait10><wait10>'
+          end
+
+
+
+
           sanitized
         end
 
