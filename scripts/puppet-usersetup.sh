@@ -1,13 +1,23 @@
 #!/bin/sh
 
-source '/var/local/simp/inc/simp-info-utils.inc.sh'
+set -e
+
+SIMP_DIR="${SIMP_DIR:-/var/local/simp}"
+source "${SIMP_DIR}/scripts/inc/simp-info-utils.inc.sh"
 hieradata_dir="$(simp_hieradata_path)"
 pupenvdir="$(puppet_env_path)"
 
-sed -i -e 's@/data$@/hieradata@g' /root/.bashrc-extras
-
 echo "The puppet environment directory is: $pupenvdir"
 echo "The hiera data directory is: $hieradata_dir"
+
+# Add some shortcuts to root's .bashrc (to help get around)
+setup_root_user_extras()
+{
+  [ -f /root/.bashrc-extras ] || \
+    cp "$SIMP_DIR/files/root/.bashrc-extras" /root/.bashrc-extras
+  sed -i -e "s@/data\$@/${hiera_dir}@g" /root/.bashrc-extras
+}
+
 
 if [ ! -d "${pupenvdir}/simp/modules/site/manifests" ]; then
    mkdir -p "${pupenvdir}/simp/modules/site/manifests"

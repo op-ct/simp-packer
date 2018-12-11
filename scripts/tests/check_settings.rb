@@ -1,9 +1,18 @@
-#! /usr/bin/env ruby
+#!/usr/bin/env ruby
 require 'yaml'
 
 class SettingsError < StandardError; end
 
 class CheckSettings
+  # CLI usage message
+  MSG = <<-MSG.gsub(%r{^ {4}}, '')
+    Usage:
+        #{File.basename(__FILE__)} EXPECTED_FILE [HIERADATA_FILE]"
+
+      EXPECTED_FILE  = packer simp_conf.yaml file
+      HIERADATA_FILE = `simp config` output (<data>/simp_config_settings.yaml)
+  MSG
+
   def initialize(never_fail)
     # when true, checking stops at the first failed
     # check, but the failure is ignored
@@ -124,21 +133,29 @@ class CheckSettings
     check_puppet_ports
   end
 
-  # Loads the test and actual settings from their respective files,
-  # packer.yaml and (typically) simp_config_settings.yaml
-  def load_settings
-    @expected_conf = YAML.load_file(@expected_conf_file)
-    @actual_conf = YAML.load_file(@actual_conf_file)
+  def hiera_dir
+    simp_version_file = '/etc/simp/simp.version'
+    sv_regex = %r{\A(\d+(?:(?:\.\d+)?\.\d+)?).*}
+    @simp_version ||= File.read(simp_version_file).strip.gsub!(sv_regex, '\1')
+    @pup_env_path ||= %x(puppet config print environmentpath).strip
+    if Gem::Version.new(@simp_version) < Gem::Version.new('6.3.0')
+      "#{@pup_env_path}/simp/hieradata"
+    else
+      "#{@pup_env_path}/simp/data"
+    end
   end
 
-  def parse_args(_args)
-    if ARGV.size < 2
-      msg = "Usage: #{File.basename(__FILE__)} expected_conf_file actual_conf_file"
-      raise ArgumentError, msg
-    end
-    @expected_conf_file = ARGV[0] # test config (packer.yaml)
-    @actual_conf_file = ARGV[1]   # actual config on server under test
-    # (simp_config_settings.yaml)
+  def parse_args(args)
+    raise(ArgumentError, MSG) if args.empty? || args.size > 2
+    raise "ERROR: '#{args[0]}' not found\n\n#{MSG}" unless File.exist? args[0]
+    @expected_conf = YAML.load_file(args[0])
+    h_file = if args.size == 2
+               raise "ERROR: '#{args[1]}' not found\n\n#{MSG}" unless File.exist? args[1]
+               args[1]
+             else
+               File.join(hiera_dir, 'simp_config_settings.yaml')
+             end
+    @actual_conf = YAML.load_file(h_file)
   end
 
   # Load the configuration specified by command line arguments
@@ -146,31 +163,23 @@ class CheckSettings
   def run(args)
     begin
       parse_args(args)
-      load_settings
-
       execute_checks
-      result = 0
     rescue SettingsError => e
-      # check failure
-      if @never_fail
-        puts "Settings error ignored: #{e.message}"
-        result = 0
-      else
-        warn "ERROR: #{e.message}"
-        result = 1
+      unless @never_fail
+        warn "SETTINGS ERROR: #{e.message}"
+        return 3
       end
+      puts "Settings error ignored: #{e.message}"
     rescue ArgumentError, Psych::SyntaxError => e
-      # YAML parsing error
-      warn "ERROR: #{e.message}"
-      result = 1
+      warn "YAML PARSING ERROR: (#{e.class}) #{e.message}\n#{'-' * 40}\n" +
+           e.backtrace.first(10).join("\n")
+      return 2
     rescue StandardError => e
-      # everything else
-      warn "FAILURE: #{e.message}"
-      e.backtrace.first(10).each { |l| warn l }
-      result = 1
+      warn "FAILURE: (#{e.class}) #{e.message}\n#{'-' * 40}\n" +
+           e.backtrace.first(10).join("\n")
+      return 1
     end
-
-    result
+    0
   end
 end
 

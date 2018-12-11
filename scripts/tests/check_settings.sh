@@ -6,10 +6,11 @@
 #
 set -e
 
-source '/var/local/simp/inc/simp-info-utils.inc.sh'
+source '/var/local/simp/scripts/inc/simp-info-utils.inc.sh'
 hieradata_dir="$(simp_hieradata_path)"
 
 packerdir=${VAR_LOCAL_SIMP_DIR:-"/var/local/simp"}
 simp_default="${hieradata_dir}/simp_config_settings.yaml"
 
 ruby "${packerdir}/scripts/tests/check_settings.rb" "${packerdir}/files/simp_conf.yaml" "${simp_default}"
+#/opt/puppetlabs/puppet/bin/ruby /var/local/simp/scripts/tests/check_settings.rb /var/local/simp/files/simp_conf.yaml "${simp_default}"

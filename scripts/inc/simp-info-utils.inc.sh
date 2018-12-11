@@ -9,7 +9,7 @@
 #    pupenvdir="$(puppet_env_path)"
 
 # Ensure the PATH can reach Puppet binaries
-export PATH="${PATH}:/opt/puppetlabs/puppet/bin"
+export PATH="/opt/puppetlabs/puppet/bin:${PATH}"
 
 # Returns the SIMP version information by setting various shell variables
 #
@@ -29,6 +29,7 @@ simp_semver_vars()
 puppet_env_path()
 {
   _simp_puppet_environment_dir="${_simp_puppet_environment_dir:-$(puppet config print environmentpath)}"
+  echo "$_simp_puppet_environment_dir"
 }
 
 
