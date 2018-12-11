@@ -15,7 +15,7 @@ task :clean do
 
   # remove left-over VirtualBox boxes
   if ENV.fetch('SIMP_PACKER_clean_virtualbox', 'no') == 'yes'
-    boxname_regex = %r{SIMP.*-FIPS}
+    boxname_regex = %r{SIMP.*FIPS}
     vboxes = Hash[vb_list_vms(boxname_regex)]
 
     # Delete any VM that is left over

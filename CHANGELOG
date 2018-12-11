@@ -9,6 +9,7 @@ tasks (see the README.md for examples).
   - New Rake task: `packer:validate`
   - New ENV var: `SIMP_PACKER_big_sleep`
   - New ENV var: `SIMP_PACKER_matrix_label`
+  - New ENV var: `SIMP_PACKER_clean_virtualbox`
   - Initial Ruby Unit tests
   - Each matrix log now includes information about its iteration
 * Changed:

@@ -29,9 +29,9 @@
   * [The Vagrantfile](#the-vagrantfile)
   * [Default SIMP server environment](#default-simp-server-environment)
   * [Troubleshooting & common problems](#troubleshooting--common-problems)
-    * [Building the boxes](#building-the-boxes)
-      * [`fatal error: runtime: out of memory`](#fatal-error-runtime-out-of-memory)
-      * [`Post-processor failed:` ... `no space left on device`](#post-processor-failed--no-space-left-on-device)
+    * [Error: `fatal error: runtime: out of memory`](#error-fatal-error-runtime-out-of-memory)
+    * [Error: `virtualbox-iso: `... `Machine settings file '____' already exists`](#error-virtualbox-iso--machine-settings-file-____-already-exists)
+    * [Error: `Post-processor failed:` ... `no space left on device`](#error-post-processor-failed--no-space-left-on-device)
 * [Development](#development)
   * [Contributing to `simp-packer`](#contributing-to-simp-packer)
   * [Travis pipeline](#travis-pipeline)
@@ -360,14 +360,12 @@ output directory.
 
 ### Troubleshooting & common problems
 
-#### Building the boxes
-
-##### `fatal error: runtime: out of memory`
+#### Error: `fatal error: runtime: out of memory`
 
 This error is generally encountered during the OS ISO upload, and it means what it
 says: the host machine that is building the VM has run out of available RAM
 
-**Characteristic log snippet:**
+**Log snippet:**
 
 ```
 2018/08/13 15:38:35 ui: ==> virtualbox-iso: Uploading /path/to/ISO/CentOS-7-x86_64-DVD-1708.iso => /var/local/simp/CentOS-7-x86
@@ -385,7 +383,37 @@ _64-DVD-1708.iso
 ```
 
 
-##### `Post-processor failed:` ... `no space left on device`
+#### Error: `virtualbox-iso: `... `Machine settings file '____' already exists`
+
+This error happens when VirtualBox files with the same name are already present
+on the filesystem.  These files are usually left over from previous simp-packer
+builds that failed ungracefully, or were interrupted before cleaning up.
+
+**Log snippet**
+
+```
+==> virtualbox-iso: Error creating VM: VBoxManage error: VBoxManage: error: Machine settings file '/path/to/VirtualBox VMs/SIMP6.X-CENTOS7-FIPS-ENCRYPTED/SIMP6.X-CENTOS7-FIPS-ENCRYPTED.vbox' already exists
+==> virtualbox-iso: VBoxManage: error: Details: code VBOX_E_FILE_ERROR (0x80bb0004), component MachineWrap, interface IMachine, callee nsISupports
+==> virtualbox-iso: VBoxManage: error: Context: "CreateMachine(bstrSettingsFile.raw(), bstrName.raw(), ComSafeArrayAsInParam(groups), bstrOsTypeId.raw(), create Flags.raw(), machine.asOutParam())" at line 273 of file VBoxManageMisc.cpp
+==> virtualbox-iso: Step "stepCreateVM" failed
+==> virtualbox-iso: [c] Clean up and exit, [a] abort without cleanup, or [r] retry step (build may fail even if retry succeeds)?
+```
+
+**Solution**
+
+You can clean out leftover VirtualBox VMs and files by running `rake clean`
+with `SIMP_PACKER_clean_virtualbox=yes`
+
+_**CAUTION: do not do this while building boxes with simp-packer.**  (It will
+clean out those VMs, too:)_
+
+```sh
+# Destroys and removes old VirtualBox VMs and VM files matching /SIMP.*FIPS/
+SIMP_PACKER_clean_virtualbox=yes bundle exec rake clean
+```
+
+
+#### Error: `Post-processor failed:` ... `no space left on device`
 
 `simp_config.rb` configures the vagrant post-processor to write the `.box` file
 into the `<testingdirectory>/OUTPUT` directory, or the path of
@@ -393,7 +421,7 @@ into the `<testingdirectory>/OUTPUT` directory, or the path of
 location does not have the capacity to hold the box while it is being
 constructed, it will fail.
 
-**Characteristic log snippet:**
+**Log snippet:**
 
 ```
 ==> virtualbox-iso: Running post-processor: vagrant
