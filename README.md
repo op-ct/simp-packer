@@ -15,13 +15,15 @@
 * [Usage](#usage)
   * [Using `rake simp:packer:matrix`](#using-rake-simppackermatrix)
     * [Build matrix elements](#build-matrix-elements)
-    * [Environment variables for build matrices](#environment-variables-for-build-matrices)
   * [Using `rake simp:packer:build`](#using-rake-simppackerbuild)
     * [Manually creating the configuration files](#manually-creating-the-configuration-files)
   * [Output file locations](#output-file-locations)
-  * [Environment variables](#environment-variables)
 * [Reference](#reference)
   * [Project structure](#project-structure)
+  * [Environment variables](#environment-variables)
+    * [The `TMPDIR` variable](#the-tmpdir-variable)
+    * [Build variables](#build-variables)
+    * [Build matrix variables](#build-matrix-variables)
   * [The Packer file](#the-packer-file)
     * [Build Section](#build-section)
     * [Provisioning Section](#provisioning-section)
@@ -50,7 +52,7 @@
 
 * `simp-packer` supports SIMP >= 6.0.0-0 (see [Supported SIMP
   releases](#supported-simp-releases)).
-* It builds Vagrant boxes for [Virtualbox][#virtualbox] using Vagrant's
+* It builds Vagrant boxes for [Virtualbox][virtualbox] using Vagrant's
   [virtualbox-iso][vagrant-virtualbox-iso] builder.
 * See the [Roadmap](#roadmap) for boxes/features that are currently implemented
   and planned.
@@ -157,18 +159,6 @@ Build matrix elements are delimited by colons (`:`)
   data for `el6` and one for `el7`), only the file with data for `el6` would be
   included in the matrix—and the `el7` file would not be used.
 
-
-#### Environment variables for build matrices
-
-| Environment variable  | Description                     |
-| --------------------- | ------------------------------- |
-| [**`TMPDIR`**][TMPDIR]        | This is a POSIX environment variable that is often **critical to set** when running packer: the directory _must_ be able to store over 4GB as each box is being built.  The default location is `/tmp`, which on many systems is unable to store that much data. |
-| `VAGRANT_BOX_DIR`     | Path to top of Vagrant box tree |
-| `SIMP_ISO_JSON_FILES` | List of absolute paths/globs to SIMP ISO `.json` files to consider (delimiters: `:`, `,`).  This variable can be used as an alternative to the matrix entry `json=`.  Non-existent paths will be discarded with a warning message |
-| `SIMP_PACKER_matrix_label`        | Label for this matrix run that will prefix each iteration's directory name (default: `build_<YYYYmmdd>_<HHMMSS>`) |
-| `SIMP_PACKER_big_sleep`    | Extra time to wait after installing the OS before packer attemps to log into the console.  Accepts number of seconds or a customized string of any combination of `<wait(10|5|)>` directives.  (default: 60 seconds) |
-
-
 ### Using `rake simp:packer:build`
 
 ```sh
@@ -182,7 +172,7 @@ TMPDIR=/some/tmp/dir \
 - `packer` uses around twice the space of the virtual image footprint when
   building, so ensure that `TMPDIR` has sufficient space.  `TMPDIR` defaults to
   `/tmp` which is not (usually) large enough.
-- For full documentation on each task argument, run:
+- For full documentation on each argument, run:
 
         bundle exec rake -D simp:packer:
 
@@ -220,17 +210,6 @@ See [samples/README.md](samples/README.md) for more information.
   `output_directory` (default is `<testdirectory>/OUTPUT`).
 
 
-### Environment variables
-
-* The [Environment Variables for Packer][packer-env-vars] are useful to customize builds.
-* Other important variables:
-
-| Variable                     | Description |
-| ---------------------------- | ----------- |
-| [**`TMPDIR`**][TMPDIR]       | This is a POSIX environment variable that is often **critical to set** when running packer: the directory _must_ be able to store over 4GB as the box is being built.  The default location is `/tmp`, which on many systems is unable to store that much data. |
-| **`EXTRA_SIMP_PACKER_ARGS`** | Extra CLI arguments when running `packer build` |
-| **`SIMP_PACKER_verbose`**    |  When `yes`, some simp-packer logic produces more detailed output (default: `no`).|
-
 
 ## Reference
 
@@ -256,6 +235,44 @@ See [samples/README.md](samples/README.md) for more information.
 ```
 
 ‡ = Executed inside VMs as simp-packer is building them
+
+
+### Environment variables
+
+* The [Environment Variables for Packer][packer-env-vars] are useful to customize builds.
+* Other important variables:
+
+#### The `TMPDIR` variable
+
+For most systems, it is  **critical** to set the `TMPDIR` variable while building VMs with simp-packer.
+
+| Environment variable         | Description |
+| ---------------------------- | ----------- |
+| [**`TMPDIR`**][TMPDIR]       | This is a POSIX environment variable that is often **critical to set** when running packer: the directory _must_ be able to store over 4GB as the box is being built.  The default location is `/tmp`, which on many systems is unable to store that much data. |
+
+#### Build variables
+
+In addition to the settings below, it is _highly recommended_ to set the [`TMPDIR` variable](#the-tmpdir-variable).
+
+| Environment variable         | Description |
+| ---------------------------- | ----------- |
+| **`EXTRA_SIMP_PACKER_ARGS`** | Extra CLI arguments when running `packer build` |
+| **`SIMP_PACKER_verbose`**    |  When `yes`, some simp-packer logic produces more detailed output (default: `no`).|
+| **`SIMP_PACKER_big_sleep`**  | Extra time to wait after installing the OS before packer attemps to log into the console.  Accepts number of seconds or a customized string of any combination of `<wait(10|5|)>` directives.  (default: 60 seconds) |
+
+#### Build matrix variables
+
+In addition to these variables:
+* The build matrix can also use [build variables](#build-variables), like `SIMP_PACKER_big_sleep`
+* It is also highly _recommended_ to set the [`TMPDIR` variable](#the-tmpdir-variable)
+
+| Environment variable        | Description                     |
+| --------------------------- | ------------------------------- |
+| `VAGRANT_BOX_DIR`           | Path to top of Vagrant box tree |
+| `SIMP_ISO_JSON_FILES`       | List of absolute paths/globs to SIMP ISO `.json` files to consider (delimiters: `:`, `,`).  This variable can be used as an alternative to the matrix entry `json=`.  Non-existent paths will be discarded with a warning message |
+| `SIMP_PACKER_matrix_label`  | Label for this matrix run that will prefix each iteration's directory name (default: `build_<YYYYmmdd>_<HHMMSS>`) |
+
+
 
 
 ### The Packer file
@@ -333,7 +350,7 @@ output directory.
   settings can be seen. Vagrant is not easily configured to check if a vbox
   hostonly network exists; you will have to ensure the network exists before
   running `vagrant up`.
-- You can change the network name in the Vagrant file.
+- You can change the network name in the Vagrantfile.
 - The Vagrantfile does not configure the machine to _use_ its IP address.
   You can turn it on, but changing the IP address will mess up the puppet
   server.
@@ -389,7 +406,7 @@ This error happens when VirtualBox files with the same name are already present
 on the filesystem.  These files are usually left over from previous simp-packer
 builds that failed ungracefully, or were interrupted before cleaning up.
 
-**Log snippet**
+**Log snippet:**
 
 ```
 ==> virtualbox-iso: Error creating VM: VBoxManage error: VBoxManage: error: Machine settings file '/path/to/VirtualBox VMs/SIMP6.X-CENTOS7-FIPS-ENCRYPTED/SIMP6.X-CENTOS7-FIPS-ENCRYPTED.vbox' already exists
@@ -399,7 +416,7 @@ builds that failed ungracefully, or were interrupted before cleaning up.
 ==> virtualbox-iso: [c] Clean up and exit, [a] abort without cleanup, or [r] retry step (build may fail even if retry succeeds)?
 ```
 
-**Solution**
+**Solution:**
 
 You can clean out leftover VirtualBox VMs and files by running `rake clean`
 with `SIMP_PACKER_clean_virtualbox=yes`
@@ -438,6 +455,11 @@ Build 'virtualbox-iso' errored: 1 error(s) occurred:
 
 ==> Builds finished but no artifacts were created.
 ```
+
+**Solution:**
+
+* Ensure that the partition where you are building `simp-packer` VMs has enough capacity (>4GB free)
+* Build VMs with the [`TMPDIR` variable](#the-tmpdir-variable) set to a filesystem with enough capacity(>4GB free)
 
 
 ## Development
