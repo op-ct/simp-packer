@@ -19,16 +19,16 @@
     * [Manually creating the configuration files](#manually-creating-the-configuration-files)
   * [Output file locations](#output-file-locations)
 * [Reference](#reference)
-  * [Project structure](#project-structure)
   * [Environment variables](#environment-variables)
     * [The `TMPDIR` variable](#the-tmpdir-variable)
     * [Build variables](#build-variables)
     * [Build matrix variables](#build-matrix-variables)
-  * [The Packer file](#the-packer-file)
-    * [Build Section](#build-section)
-    * [Provisioning Section](#provisioning-section)
-      * [The `simpsetup::` Puppet module](#the-simpsetup-puppet-module)
-  * [The Vagrantfile](#the-vagrantfile)
+  * [Project structure](#project-structure)
+    * [The Packer file](#the-packer-file)
+      * [The `builders/boot_command` section](#the-buildersboot_command-section)
+      * [The `provisioning` section](#the-provisioning-section)
+    * [The `simpsetup::` Puppet module](#the-simpsetup-puppet-module)
+    * [Vagrantfiles](#vagrantfiles)
   * [Default SIMP server environment](#default-simp-server-environment)
   * [Troubleshooting & common problems](#troubleshooting--common-problems)
     * [Error: `fatal error: runtime: out of memory`](#error-fatal-error-runtime-out-of-memory)
@@ -213,29 +213,6 @@ See [samples/README.md](samples/README.md) for more information.
 
 ## Reference
 
-### Project structure
-
-```
-./
-├── assets/ ................ Images used by README.md
-├── lib/                     Ruby libraries
-├── puppet/                  ‡Puppet code (run inside VM)
-│   └── modules/                ‡ contains `simpsetup::`
-├── rakelib/ ............... Rake tasks
-├── samples/
-│   └── README.md
-├── scripts/................ ‡ Shell scripts (run inside VM)
-│   ├── config/                 ‡ scripts that configure the VM
-│   ├── tests/                  ‡ VM tests
-├── templates/.............. Templates
-│   ├── simp.json.template      Annotated JSON Packer template
-│   ├── Vagrantfile.erb         Vagrantfile generated along with `.box` files
-│   └── Vagrantfile.erb.erb     Vagrantfile.erb (for `vagrant init --template`)
-└── README.md
-```
-
-‡ = Executed inside VMs as simp-packer is building them
-
 
 ### Environment variables
 
@@ -272,14 +249,34 @@ In addition to these variables:
 | `SIMP_ISO_JSON_FILES`       | List of absolute paths/globs to SIMP ISO `.json` files to consider (delimiters: `:`, `,`).  This variable can be used as an alternative to the matrix entry `json=`.  Non-existent paths will be discarded with a warning message |
 | `SIMP_PACKER_matrix_label`  | Label for this matrix run that will prefix each iteration's directory name (default: `build_<YYYYmmdd>_<HHMMSS>`) |
 
+### Project structure
 
+```
+./
+├── assets/ ................ Images used by README.md
+├── lib/                     Ruby libraries
+├── puppet/                  ‡Puppet code (run inside VM)
+│   └── modules/                ‡ contains `simpsetup::`
+├── rakelib/ ............... Rake tasks
+├── samples/
+│   └── README.md
+├── scripts/................ ‡ Shell scripts (run inside VM)
+│   ├── config/                 ‡ scripts that configure the VM
+│   ├── tests/                  ‡ VM tests
+├── templates/.............. Templates
+│   ├── simp.json.template      Annotated JSON Packer template
+│   ├── Vagrantfile.erb         Vagrantfile generated along with `.box` files
+│   └── Vagrantfile.erb.erb     Vagrantfile.erb (for `vagrant init --template`)
+└── README.md
+```
 
+‡ = Executed inside VMs as simp-packer is building them
 
-### The Packer file
+#### The Packer file
 
 The packer file is generated from the file `templates/simp.json.template`.
 
-#### Build Section
+##### The `builders/boot_command` section
 
 - Installs the ISO
 - Adds the `vagrant` user
@@ -289,7 +286,7 @@ The packer file is generated from the file `templates/simp.json.template`.
 - Updates the `sudoers` file so `simp` user can sudo without a password and
   without a tty
 
-#### Provisioning Section
+##### The `provisioning` section
 
 Runs a suite of configurations and tests while packer is provisioning the new
 box:
@@ -317,7 +314,7 @@ Tests:
   `simp_conf.yaml`
 
 
-##### The `simpsetup::` Puppet module
+#### The `simpsetup::` Puppet module
 
 After the tests pass, `simp-packer` configures the Puppet by running `puppet
 apply` on the `simpsetup` module is applied using `puppet apply`.  It is run
@@ -343,7 +340,7 @@ The post-processor then exports the VirtualBox to a Vagrant box and removes the
 output directory.
 
 
-### The Vagrantfile
+#### Vagrantfiles
 
 - The `vagrant` user's SSH password is `vagrant`.
 - The Vagrantfile is not wrapped in the Vagrant `.box`, so the network
@@ -358,6 +355,8 @@ output directory.
 
 
 ### Default SIMP server environment
+
+`simp-packer` builds Puppet server VMs that follow these conventions:
 
 - The Puppet server's IP will be `X.X.X.7`
 - DHCP and DNS are pre-populated with entries for `server21.domain.name`
