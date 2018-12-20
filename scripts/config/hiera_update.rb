@@ -59,6 +59,12 @@ update_hiera_data('default') do |data|
     pupmod::agent::cron::monthday: '31'
     pupmod::agent::cron:break_puppet_lock: false
     pupmod::agent::cron:max_disable_time: 999999
+
+    # tlog breaks vagrant at the moment
+    #
+    #   See: https://simp-project.atlassian.net/browse/SIMP-5892
+    #
+    simp::admin::force_logged_shell: false
   YAML
 end
 
