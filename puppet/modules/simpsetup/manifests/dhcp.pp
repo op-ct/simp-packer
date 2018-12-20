@@ -35,6 +35,7 @@ class simpsetup::dhcp (
     group   => 'root',
     mode    => '0640',
     seltype => 'dhcp_etc_t',
+    seluser => 'system_u',
     order   => 'numeric'
   }
 
