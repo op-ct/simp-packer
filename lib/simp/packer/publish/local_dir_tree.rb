@@ -258,13 +258,35 @@ module Simp
         # Install vagrant box into a local directory tree, generate version metadata
         #
         # @param [String] box_path path to the `.box` file
-        # @param [Symbol] link  Action taken to place `.box` file.  Valid
-        #   symbols are `:hardlink`, `:copy`, or `:move` (Default: :hardlink)
-        def self.publish(vars_json_path, box_path, vagrant_box_dir, link = :hardlink)
+        # @param options [Hash] options
+        #
+        # @option options [String]         :link    Action to place `.box` file.
+        #   Valid symbols are `:hardlink`, `:copy`, or `:move`
+        #   (Default: :hardlink)
+        # @option options [Array<String>] :flavors  (active)
+        def self.publish(vars_json_path, box_path, vagrant_box_dir, options={})
+          opts = { link: :hardlink, flavors: [] }.merge(options)
           converter = Simp::Packer::VarsJsonToVagrantBoxJson.new(vars_json_path)
-          box_data  = converter.vagrant_box_json(box_path)
+          box_data  = converter.vagrant_box_json(box_path, flavors: opts[:flavors])
           dir_tree  = Simp::Packer::Publish::LocalDirTree.new(vagrant_box_dir)
-          dir_tree.publish(box_data, link) # TODO: env var for copy/link action?
+          dir_tree.publish(box_data, opts[:link]) # TODO: env var for copy/link action?
+        end
+
+
+        def place_box_method(action)
+          case action
+          when :copy
+            migrate = ->(src, dst, verbose = true) { FileUtils.cp src, dst, verbose: verbose }
+          when :move
+            migrate = ->(src, dst, verbose = true) { FileUtils.mv src, dst, verbose: verbose }
+          when :hardlink
+            migrate = lambda do |src, dst, verbose = true|
+              FileUtils.ln src, dst, verbose: verbose, force: (ENV['SIMP_PACKER_publish_force'] == 'yes')
+            end
+          else
+            raise 'ERROR: `action` must be :copy, :move, or :hardlink'
+          end
+          migrate
         end
 
         # Install vagrant box into a local directory tree, generate version metadata
@@ -287,20 +309,9 @@ module Simp
           # Below this line: local file stuff
           mkdir_p box_dir, verbose: @verbose
           box_data['versions'].first['providers'].first['url'] = "file://#{box_file_dest}"
-          case action
-          when :copy
-            migrate = ->(src, dst, verbose = true) { FileUtils.cp src, dst, verbose: verbose }
-          when :move
-            migrate = ->(src, dst, verbose = true) { FileUtils.mv src, dst, verbose: verbose }
-          when :hardlink
-            migrate = lambda do |src, dst, verbose = true|
-              FileUtils.ln src, dst, verbose: verbose, force: (ENV['SIMP_PACKER_publish_force'] == 'yes')
-            end
-          else
-            raise 'ERROR: `action` must be :copy, :move, or :hardlink'
-          end
           src_path = box_file_src.sub(%r{^file://}, '')
           puts "\nPlacing (action: #{action}) box file at path:\n  #{box_file_dest}"
+          migrate = place_box_method(action)
           migrate.call src_path, box_file_dest
 
           # copy Vagrantfile erb templates (use with `vagrant init BOX --template VAGRANT_ERB_FILE`)

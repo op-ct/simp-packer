@@ -13,6 +13,7 @@ namespace :vagrant do
   task :json, [:simp_iso_json_file, :vagrantbox_path] do |_t, args|
     args.with_defaults(:simp_iso_json_file => 'vars.json')
     converter = Simp::Packer::VarsJsonToVagrantBoxJson.new(args.simp_iso_json_file)
+    # TODO: optionally specify extra box flavors during `vagrant_box_json`
     data = converter.vagrant_box_json(args.vagrantbox_path)
     require 'json'
     file = "#{data['name']}.json"

@@ -34,11 +34,12 @@ module Simp
       # @param vagrantbox_path [String] path to Vagrant .box file
       # @param options [Hash] optional metadata overrides
       #
-      # @option options [String]  :version       Defaults to the `.box` file's File.mtime (%Y%m%d.%H%M%S)
-      # @option options [String]  :status        (active)
-      # @option options [Boolean] :is_private    (false)
-      # @option options [Integer] :downloads     (0)
-      # @option options [String]  :provider_name (virtualbox)
+      # @option options [String]        :version       Defaults to the `.box` file's File.mtime (%Y%m%d.%H%M%S)
+      # @option options [String]        :status        (active)
+      # @option options [Boolean]       :is_private    (false)
+      # @option options [Integer]       :downloads     (0)
+      # @option options [String]        :provider_name (virtualbox)
+      # @option options [Array<String>] :flavors       Extra descriptive strings to tack onto box name
       #
       # @see https://www.vagrantup.com/docs/boxes/format.html#box-metadata
       #   Vagrant Box Metadata structure
@@ -59,10 +60,15 @@ module Simp
         warn "Calculating sha256sum of '#{vagrantbox_path}'..."
         require 'digest'
         box_checksum = Digest::SHA256.file(vagrantbox_path).hexdigest
+        box_name = options[:name] || @options[:name]
+        flavors  = options[:flavors] || []
+        unless flavors.empty?
+          box_name += "-#{flavors.join('-')}"
+        end
 
         {
-          'tag'                  => "#{@options[:org]}/#{@options[:name]}",
-          'name'                 => @options[:name],
+          'tag'                  => "#{@options[:org]}/#{box_name}",
+          'name'                 => box_name,
           'username'             => @options[:org],
           'created_at'           => created_at,
           'updated_at'           => updated_at,

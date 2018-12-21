@@ -11,6 +11,7 @@ module Simp
         include Simp::Tests::Matrix::Unroller
         include FileUtils
 
+        # Instantiate an object of type Simp::Packer::Build::Matrix
         # @param matrix [Array] matrix of things
         def initialize(matrix)
           env_json_files    = parse_glob_list(ENV['SIMP_ISO_JSON_FILES'])
@@ -29,9 +30,10 @@ module Simp
           @dir_name            = ENV['DIR_NAME'] || 'test'
         end
 
-        # - list of paths or path globs to SIMP ISO .json files
-        # - delimited by `:` or `,`
-        # - Non-existent paths will be discarded with a warning message
+        # Return files matched from a `:` or `,`-delimited list of globs
+        #   (Non-matching globs will be discarded with a warning message).
+        # @param str [String] string of paths, delimited by `:` or `,`
+        # @return [Array<String>] list of files
         def parse_glob_list(str)
           globs = str.split(%r{[,:]})
           list = []
@@ -46,6 +48,7 @@ module Simp
           list
         end
 
+        # Run the build matrix
         def run(label = (ENV['SIMP_PACKER_matrix_label'] || 'build') + Time.now.utc.strftime('_%Y%m%d_%H%M%S'))
           iteration_total = @iterations.size
           iteration_number = 0
@@ -69,12 +72,14 @@ module Simp
               warn "INFO: falling back to ISO at same path/naming scheme as json file:\n  Using ISO '#{simp_iso_file}'"
             end
 
-            iteration_dir  = "#{label}__#{vars_data['box_simp_release']}__#{os_name}_#{fips ? 'fips' : 'nofips'}"
-            iteration_dir += '_encryption' if encryption
-            iteration_summary = "os=#{os_name} fips=#{fips ? 'on' : 'off'}"
-            iteration_summary = ' encryption=on' if encryption
-            vm_description =  "SIMP#{vars_data['box_simp_release']}-#{os_name.upcase}-#{fips ? 'FIPS' : 'NOFIPS'}"
-            vm_description += '-ENCRYPTED' if encryption
+            iteration_summary = "os=#{os_name}" + \
+              " fips=#{fips ? 'on' : 'off'}" + \
+              " encryption=#{encryption ? 'on' : 'off'}"
+            box_flavors = [(fips ? 'fips' : 'nofips')]
+            box_flavors << 'encrypted' if encryption
+
+            vm_description =  "SIMP#{vars_data['box_simp_release']}-#{os_name.upcase}-#{box_flavors.join('-').upcase}"
+            iteration_dir = "#{label}__#{vars_data['box_simp_release']}__#{os_name}_#{box_flavors.join('_')}"
 
             msg = []
             msg << "\n" * 5
@@ -121,9 +126,9 @@ module Simp
             )
             next if ENV.fetch('SIMP_PACKER_dry_run', 'no') == 'yes'
 
-            new_box = File.expand_path("#{iteration_dir}/OUTPUT/#{vm_description}.box")
+            box_path = File.expand_path("#{iteration_dir}/OUTPUT/#{vm_description}.box")
             vars_json_path = File.expand_path(local_vars_json, iteration_dir)
-            Simp::Packer::Publish::LocalDirTree.publish(vars_json_path, new_box, @vagrant_box_dir)
+            Simp::Packer::Publish::LocalDirTree.publish(vars_json_path, box_path, @vagrant_box_dir,{flavors: box_flavors})
             sh "date >> '#{log}'"
           end
         end
