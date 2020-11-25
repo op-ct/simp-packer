@@ -1,0 +1,15 @@
+---
+name: simp_packer
+modulepath:
+- bolt-modules
+- modules
+
+modules:
+- name: puppetlabs-stdlib
+- name: puppetlabs-ruby_task_helper
+- git: https://github.com/voxpupuli/puppet-format.git
+  ref: v0.1.1
+
+log:
+  console:
+    level: debug

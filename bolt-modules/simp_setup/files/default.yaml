@@ -1,0 +1,10 @@
+---
+#simp::classes:
+#  - 'site::vagrant'
+
+# enable root login over ssh
+ssh::server::conf::permitrootlogin: true
+
+# change the default authorized keys file to the users local dir for vagrant
+ssh::server::conf::authorizedkeysfile: .ssh/authorized_keys
+simplib::resolv::option_rotate: false

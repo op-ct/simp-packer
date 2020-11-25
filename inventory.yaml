@@ -1,0 +1,10 @@
+---
+config:
+  transport: ssh
+  ssh:
+    host-key-check: false
+    run-as: root
+    tmpdir: '/var/local/simp'
+
+features:
+  - puppet-agent

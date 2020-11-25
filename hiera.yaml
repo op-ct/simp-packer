@@ -1,0 +1,25 @@
+---
+version: 5
+
+defaults:
+  datadir: "data"
+
+hierarchy:
+  - name: "Yaml backend"
+    data_hash: yaml_data
+    paths:
+      - "os/%{::distro}/%{::os_version}"
+      - "os/%{::distro}/%{::maj_os_version}"
+      - "provisioner/%{::packer_provisioner}"  # virtualbox or libvirt
+      - "box_role/%{::box_role}"  # e.g., puppetserver, workstation, client
+      - "simp_scenario/%{::simp_scenario}"
+      - "nodes/%{trusted.certname}.yaml"
+      - "common.yaml"
+
+
+plan_hierarchy:
+  - name: "Yaml backend"
+    data_hash: yaml_data
+    paths:
+      - "plan_common.yaml"
+      - "common.yaml"
