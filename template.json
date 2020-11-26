@@ -99,31 +99,12 @@
   ],
   "provisioners": [
     {
-      "type": "shell",
-      "inline": [
-        "sudo cat /etc/ssh/sshd_config"
-      ],
-      "remote_path": "/var/local/simp/inline-cat-sshd_config.sh"
-    },
-    {
       "type": "shell-local",
       "inline": [
          "echo '===== pwd: \"{{ pwd }}\"",
          "echo '===== simp_packer::do",
          "printf \"===== \\n\\n\\n\\n bolt plan run simp_packer::do --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: \\n\\n\\n\\n=====\\n\"",
-         "bolt plan run simp_packer::do --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: ",
-         "echo '===== '",
-         "echo '===== '",
-         "echo '===== '",
-         "echo '===== '",
-         "echo '===== '",
-         "echo \"===== sleeping for two hours, starting at: $(date)\"",
-         "echo '===== '",
-         "echo '===== '",
-         "echo '===== '",
-         "echo '===== '",
-         "echo '===== '",
-         "sleep 7200"
+         "bolt plan run simp_packer::do --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: "
        ]
     },
     {
@@ -140,6 +121,23 @@
         "else",
           "/sbin/reboot",
         "fi"
+       ]
+    },
+    {
+      "type": "shell",
+      "inline": [
+         "echo '===== '",
+         "echo '===== '",
+         "echo '===== '",
+         "echo '===== '",
+         "echo '===== '",
+         "echo \"===== sleeping for two hours, starting at: $(date)\"",
+         "echo '===== '",
+         "echo '===== '",
+         "echo '===== '",
+         "echo '===== '",
+         "echo '===== '",
+         "sleep 7200"
        ]
     }
   ],

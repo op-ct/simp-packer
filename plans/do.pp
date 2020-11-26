@@ -8,20 +8,11 @@ plan simp_packer::do(
  String[1]  $umask            = '0027',
  Stdlib::Absolutepath $simp_conf_file = "${pwd}/testfiles/simp_conf.yaml",
 ){
-  ### # NOTE we may no longer need these uploads now that we're using Bolt
-  ### ['files','scripts','puppet'].each |$dir| {
-  ###   upload_file("${pwd}/${dir}", '/var/local/simp/', $targets, { '_catch_errors'             => true })
-  ### }
-  ### run_command( "find /var/local/simp/scripts -type f -name '*.sh' -print -exec chmod +x {} \\;", $targets )
-
-  run_task( "simp_packer::check_settings_at_boot",
-    $targets,
-    {
-      'fips'         => $fips,
-      'disk_encrypt' => $disk_encrypt,
-      'firmware'     => $firmware,
-    }
-  )
+  run_task( "simp_packer::check_settings_at_boot", $targets, {
+    'fips'         => $fips,
+    'disk_encrypt' => $disk_encrypt,
+    'firmware'     => $firmware,
+  })
   run_task( 'simp_packer::check_partitions', $targets )
 
   apply( $targets, {'_description' => 'Set up vagrant user and root umask' }){
@@ -35,9 +26,8 @@ plan simp_packer::do(
   #   - edit with this run's settings (possibly from Hiera)
   #   - probably create it from hiera data
   upload_file("${simp_conf_file}", '/var/local/simp/simp_conf.yaml', $targets, { '_catch_errors' => true })
-  $force_config='--force-config'
   run_command(
-    "echo \"umask: $(umask)\"; simp config -a /var/local/simp/simp_conf.yaml ${force_config}",
+    "echo \"umask: $(umask)\"; simp config -a /var/local/simp/simp_conf.yaml",
     $targets,
     'Run simp config',
   )
@@ -52,7 +42,5 @@ plan simp_packer::do(
     'Disable NetworkManager',
   )
 
-  debug::break()
   run_task( 'simp_packer::run_simp_bootstrap', $targets )
-
 }
