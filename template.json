@@ -125,6 +125,22 @@
          "echo '===== '",
          "sleep 7200"
        ]
+    },
+    {
+      "type": "shell",
+      "valid_exit_codes": [ 0, 143 , 2300218],
+      "remote_path": "/var/local/simp/reboot1.sh",
+      "execute_command": "sudo chmod +x {{.Path}}; {{.Vars}} sudo -E bash '{{.Path}}'",
+      "expect_disconnect": true,
+      "skip_clean": true,
+      "inline" : [
+        "echo 'Rebooting...'",
+        "if [ -f /usr/sbin/reboot ]; then",
+          "/usr/sbin/reboot",
+        "else",
+          "/sbin/reboot",
+        "fi"
+       ]
     }
   ],
   "variables": {

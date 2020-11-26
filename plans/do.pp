@@ -42,14 +42,17 @@ plan simp_packer::do(
     'Run simp config',
   )
 
-  apply( $targets, {'_description' => 'Set up hiera defaults' }){
+  apply( $targets, {'_description' => 'Set up Hiera defaults' }){
     include 'simp_setup::hiera'
   }
-  debug::break()
+
   run_command(
-    "SIMP_PACKER_environment=production",
+    '/opt/puppetlabs/bin/puppet resource service NetworkManager ensure=stopped enable=false',
     $targets,
-    'Run simp config --force-config',
+    'Disable NetworkManager',
   )
+
+  debug::break()
+  run_task( 'simp_packer::run_simp_bootstrap', $targets )
 
 }
