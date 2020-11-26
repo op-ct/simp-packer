@@ -8,7 +8,7 @@ class simp_setup::hiera(
   file{ "${hieradata_dir}/default.yaml":
     owner   => 'root',
     group   => 'puppet',
-    mode    => '0750',
-    content => file("${module}/default.yaml"),
+    mode    => '0640',
+    content => file("${module_name}/default.yaml"),
   }
 }

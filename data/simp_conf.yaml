@@ -1,0 +1,46 @@
+---
+simp_conf:
+  cli::is_simp_ldap_server: true
+  cli::network::dhcp: static
+  cli::network::gateway: 192.168.103.1
+  cli::network::hostname: puppet.simp.test
+  cli::network::interface: enp0s8
+  cli::network::ipaddress: 192.168.103.7
+  cli::network::netmask: 255.255.255.0
+  cli::network::set_up_nic: true
+  cli::set_grub_password: true
+  cli::simp::scenario: simp
+  grub::password: grub.pbkdf2.sha512.10000.8F118DB47AD1B075CAD2A930A21B6ACE328868B5279B65012C26EC6EF42CCEB62FED27421D3EDB13549EB5AC55EB167FB0C112F6829B52D2A5564A6EA14F11D5.E4641524BDDBF57E57A725E4F88612572B1B74B3CC0FF8EBEBD52D2C72EF9D54E8AB03360010BF33CB61A0FC5360CCCA2C377B4C97102EBA61AD96752F680E1D
+  puppetdb::master::config::puppetdb_port: 8139
+  puppetdb::master::config::puppetdb_server: "%%{hiera('simp_options::puppet::server')}"
+  simp::runlevel: 3
+  simp::yum::repo::local_os_updates::enable_repo: false
+  simp::yum::repo::local_os_updates::servers:
+  - "%%{hiera('simp_options::puppet::server')}"
+  simp::yum::repo::local_simp::enable_repo: false
+  simp::yum::repo::local_simp::servers:
+  - "%%{hiera('simp_options::puppet::server')}"
+  simp_openldap::server::conf::rootpw: "{SSHA}xux83JB+KprEbGMpoOftNMFrp/jkXHfH"
+  simp_options::dns::search:
+  - simp.test
+  simp_options::dns::servers:
+  - 192.168.103.7
+  simp_options::fips: true
+  simp_options::ldap::base_dn: dc=simp,dc=test
+  simp_options::ldap::bind_hash: "{SSHA}xux83JB+KprEbGMpoOftNMFrp/jkXHfH"
+  simp_options::ldap::bind_pw: P@ssw0rdP@ssw0rd
+  simp_options::ldap::sync_hash: "{SSHA}xux83JB+KprEbGMpoOftNMFrp/jkXHfH"
+  simp_options::ldap::sync_pw: P@ssw0rdP@ssw0rd
+  simp_options::ntpd::servers:
+  - 192.168.103.1
+  simp_options::puppet::ca: puppet.simp.test
+  simp_options::puppet::ca_port: 8141
+  simp_options::puppet::server: puppet.simp.test
+  simp_options::syslog::log_servers: []
+  simp_options::trusted_nets: 192.168.103.0/24
+  sssd::domains:
+  - LDAP
+  svckill::mode: enforcing
+  useradd::securetty:
+  - tty0
+  - tty1

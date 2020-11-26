@@ -9,6 +9,7 @@ modules:
 - name: puppetlabs-ruby_task_helper
 - git: https://github.com/voxpupuli/puppet-format.git
   ref: v0.1.1
+- name: nwops/debug
 
 log:
   console:

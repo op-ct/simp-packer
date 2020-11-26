@@ -13,3 +13,5 @@ packer_template::structure:
 packer_template::builders:
   - key1
   - key2
+
+test_key: bbb

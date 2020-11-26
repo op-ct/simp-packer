@@ -79,72 +79,17 @@
       "ssh_pty": "true",
       "ssh_username": "simp",
       "vboxmanage": [
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--memory",
-          "4096"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--nic1",
-          "nat"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--nic2",
-          "hostonly"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--hostonlyadapter2",
-          "{{user `host_only_network_name`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--firmware",
-          "{{user `firmware`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--boot1",
-          "disk"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--boot2",
-          "dvd"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--macaddress2",
-          "{{user `mac_address`}}"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--macaddress1",
-          "auto"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--cpus",
-          "2"
-        ],
-        [
-          "modifyvm",
-          "{{.Name}}",
-          "--accelerate3d",
-          "off"
-        ]
+        [ "modifyvm", "{{.Name}}", "--memory", "4096" ],
+        [ "modifyvm", "{{.Name}}", "--nic1", "nat" ],
+        [ "modifyvm", "{{.Name}}", "--nic2", "hostonly" ],
+        [ "modifyvm", "{{.Name}}", "--hostonlyadapter2", "{{user `host_only_network_name`}}" ],
+        [ "modifyvm", "{{.Name}}", "--firmware", "{{user `firmware`}}" ],
+        [ "modifyvm", "{{.Name}}", "--boot1", "disk" ],
+        [ "modifyvm", "{{.Name}}", "--boot2", "dvd" ],
+        [ "modifyvm", "{{.Name}}", "--macaddress2", "{{user `mac_address`}}" ],
+        [ "modifyvm", "{{.Name}}", "--macaddress1", "auto" ],
+        [ "modifyvm", "{{.Name}}", "--cpus", "2" ],
+        [ "modifyvm", "{{.Name}}", "--accelerate3d", "off" ]
       ],
       "vm_name": "{{user `vm_description`}}",
       "vrdp_bind_address": "{{user `vrdp_bind_address`}}",
@@ -165,13 +110,14 @@
       "inline": [
          "echo '===== pwd: \"{{ pwd }}\"",
          "echo '===== simp_packer::do",
-         "bolt plan run simp_packer::do --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' root_umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: ",
+         "printf \"===== \\n\\n\\n\\n bolt plan run simp_packer::do --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: \\n\\n\\n\\n=====\\n\"",
+         "bolt plan run simp_packer::do --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: ",
          "echo '===== '",
          "echo '===== '",
          "echo '===== '",
          "echo '===== '",
          "echo '===== '",
-         "echo \"===== sleeping for two hours $(date)\"",
+         "echo \"===== sleeping for two hours, starting at: $(date)\"",
          "echo '===== '",
          "echo '===== '",
          "echo '===== '",

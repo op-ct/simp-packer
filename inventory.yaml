@@ -5,6 +5,7 @@ config:
     host-key-check: false
     run-as: root
     tmpdir: '/var/local/simp'
+    connect-timeout: 60
 
 features:
   - puppet-agent
