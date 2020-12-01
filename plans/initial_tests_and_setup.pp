@@ -1,4 +1,5 @@
-plan simp_packer::do(
+# Runs initial tests, setup, `simp config` and `simp bootstrap`
+plan simp_packer::initial_tests_and_setup(
  TargetSpec $targets          = get_targets('localhost'),
  Stdlib::Absolutepath $pwd     = system::env('PWD'),
  String[1]  $fips             = 'fips=1',
