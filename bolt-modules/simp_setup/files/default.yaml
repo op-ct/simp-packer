@@ -1,6 +1,6 @@
 ---
-#simp::classes:
-#  - 'site::vagrant'
+simp::classes:
+  - 'site::vagrant'
 
 # enable root login over ssh
 ssh::server::conf::permitrootlogin: true

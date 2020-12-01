@@ -6,7 +6,8 @@ plan simp_packer::do(
  String[1]  $firmware         = 'bios',
  String[1]  $vagrant_password = 'vagrant',
  String[1]  $umask            = '0027',
- Stdlib::Absolutepath $simp_conf_file = "${pwd}/testfiles/simp_conf.yaml",
+ Stdlib::Absolutepath $local_simp_conf_file = "${pwd}/testfiles/simp_conf.yaml",
+ Stdlib::Absolutepath $pup_env_dir = '/etc/puppetlabs/code/environments/production',
 ){
   run_task( "simp_packer::check_settings_at_boot", $targets, {
     'fips'         => $fips,
@@ -18,22 +19,24 @@ plan simp_packer::do(
   apply( $targets, {'_description' => 'Set up vagrant user and root umask' }){
     class{ 'simp_setup::vagrant_user': password => $vagrant_password }
     class{ 'simp_setup::root_umask': umask => $umask }
-    include 'simp_setup::puppet_environment_dirs'
   }
 
   # TODO: create simp_conf.yaml
   #   - pull data from hiera
   #   - edit with this run's settings (possibly from Hiera)
   #   - probably create it from hiera data
-  upload_file("${simp_conf_file}", '/var/local/simp/simp_conf.yaml', $targets, { '_catch_errors' => true })
+  upload_file("${local_simp_conf_file}", '/var/local/simp/simp_conf.yaml', $targets, { '_catch_errors' => true })
   run_command(
-    "echo \"umask: $(umask)\"; simp config -a /var/local/simp/simp_conf.yaml",
+    "umask $umask; echo \"umask: $(umask)\"; simp config -a /var/local/simp/simp_conf.yaml",
     $targets,
     'Run simp config',
   )
 
+  upload_file("${pwd}/puppet/modules/simpsetup", "${pup_env_dir}/site/", $targets, { '_catch_errors' => true })
   apply( $targets, {'_description' => 'Set up Hiera defaults' }){
-    include 'simp_setup::hiera'
+    class{ 'simp_setup::vagrant_user': password => $vagrant_password }
+    class{ 'simp_setup::root_umask': umask => $umask }
+    include 'simp_setup::puppet_environment_dirs'
   }
 
   run_command(
