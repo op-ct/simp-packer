@@ -6,6 +6,8 @@ config:
     run-as: root
     #tmpdir: '/var/local/simp'
     connect-timeout: 60
+    interpreters:
+      rb: /opt/puppetlabs/puppet/bin/ruby
 
 features:
   - puppet-agent

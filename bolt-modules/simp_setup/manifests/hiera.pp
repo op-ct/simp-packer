@@ -6,7 +6,7 @@ class simp_setup::hiera(
   Stdlib::Absolutepath $hieradata_dir = "${pupenvdir}/${environment}/data",
 ){
   file{ "${hieradata_dir}/default.yaml":
-    owner   => 'root',
+    owner   => 'puppet',
     group   => 'puppet',
     mode    => '0640',
     content => file("${module_name}/default.yaml"),

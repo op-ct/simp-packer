@@ -10,6 +10,8 @@
   "__15": "                                                                     ",
   "builders": [
     {
+      "type": "virtualbox-iso",
+      "communicator": "ssh",
       "boot_command": [
         "simp fips=1<enter><wait>",
         "<wait10><wait10><wait10><wait10><wait10><wait10>",
@@ -61,8 +63,6 @@
         "<wait5>",
         "exit<enter>"
       ],
-      "type": "virtualbox-iso",
-      "communicator": "ssh",
       "disk_size": "50000",
       "guest_os_type": "RedHat_64",
       "hard_drive_interface": "sata",
@@ -78,6 +78,7 @@
       "ssh_password": "{{user `new_password`}}",
       "ssh_pty": "true",
       "ssh_username": "simp",
+      "keep_registered": true,
       "vboxmanage": [
         [ "modifyvm", "{{.Name}}", "--memory", "4096" ],
         [ "modifyvm", "{{.Name}}", "--nic1", "nat" ],
@@ -91,56 +92,10 @@
         [ "modifyvm", "{{.Name}}", "--cpus", "2" ],
         [ "modifyvm", "{{.Name}}", "--accelerate3d", "off" ]
       ],
-      "vm_name": "{{user `vm_description`}}",
+      "vm_name": "{{user `vm_description`}}-fresh-from-ISO",
       "vrdp_bind_address": "{{user `vrdp_bind_address`}}",
       "vrdp_port_min": "{{user `vrdp_port_min`}}",
       "vrdp_port_max": "{{user `vrdp_port_max`}}"
-    }
-  ],
-  "provisioners": [
-    {
-      "type": "shell-local",
-      "inline": [
-         "echo '===== pwd: \"{{ pwd }}\"'",
-         "echo '===== simp_packer::initial_tests_and_setup'",
-         "printf \"===== \\n\\n\\n\\n bolt plan run simp_packer::initial_tests_and_setup --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --tmpdir /var/local/simp  --password '{{ build `Password` }}' --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-output.txt ||: \\n\\n\\n\\n=====\\n\"",
-         "bolt plan run simp_packer::initial_tests_and_setup --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user '{{ build `User`}}' --password '{{ build `Password` }}' --tmpdir /var/local/simp --verbose  fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-initial-setup-output.txt"
-       ]
-    },
-    {
-      "type": "shell",
-      "valid_exit_codes": [ 0, 143 , 2300218],
-      "remote_path": "/var/local/simp/reboot1.sh",
-      "execute_command": "sudo chmod +x {{.Path}}; {{.Vars}} sudo -E bash '{{.Path}}'",
-      "expect_disconnect": true,
-      "skip_clean": true,
-      "inline" : [ "echo 'Rebooting...'\n[ -f /usr/sbin/reboot ] && /usr/sbin/reboot || /sbin/reboot" ]
-    },
-    {
-      "type": "shell-local",
-      "inline": [
-         "echo '===== pwd: \"{{ pwd }}\"'",
-         "echo '===== simp_packer::post_reboot_actions'",
-         "printf \"===== \\n\\n\\n\\n bolt plan run simp_packer::post_reboot_actions --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user vagrant --private-key files/vagrant_insecure_basebox_key --tmpdir /var/local/simp --verbose fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-post-reboot-output.txt ||: \\n\\n\\n\\n=====\\n\""
-       ]
-    },
-    {
-      "type": "shell-local",
-      "inline": [
-         "printf '\\n\\n=====\\n=====\\n=====\\n=====\\n",
-         "echo \"===== sleeping for two hours, starting at: $(date)\"",
-         "printf '=====\\n=====\\n=====\\n=====\\n\\n\\n",
-         "sleep 7200"
-       ]
-    },
-    {
-      "type": "shell-local",
-      "inline": [
-         "echo '===== pwd: \"{{ pwd }}\"'",
-         "echo '===== simp_packer::post_reboot_actions'",
-         "printf \"===== \\n\\n\\n\\n bolt plan run simp_packer::post_reboot_actions --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user vagrant --private-key files/vagrant_insecure_basebox_key --tmpdir /var/local/simp --verbose fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-post-reboot-output.txt ||: \\n\\n\\n\\n=====\\n\"",
-         "bolt plan run simp_packer::post_reboot_actions --targets ssh://{{ build `Host`}}:{{ build `Port`}} --user vagrant --private-key files/vagrant_insecure_basebox_key --tmpdir /var/local/simp --verbose fips={{ user `fips` }} disk_encrypt={{ user `disk_encrypt` }} firmware={{ user `firmware` }} vagrant_password='{{user `vagrant_password`}}' umask={{ user `root_umask` }} |& tee  {{ pwd }}/plan-post-reboot-output.txt ||: "
-       ]
     }
   ],
   "variables": {
@@ -160,3 +115,4 @@
     "big_sleep": "<wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10><wait10>"
   }
 }
+
