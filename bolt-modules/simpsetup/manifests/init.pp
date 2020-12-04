@@ -45,5 +45,5 @@ class simpsetup(
   include simpsetup::togen
   include simpsetup::ldap
   include simpsetup::autosign
-  include simpsetup::site_module
+  include simpsetup::site_profile
 }

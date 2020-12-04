@@ -6,7 +6,7 @@
 #  @param  $env            The environment containing the site module directory
 #  @param  $manifests_dir  Path to the site module's manifests directory
 #
-class simpsetup::site_module(
+class simpsetup::site_profile(
   String               $env      = $simpsetup::environment,
   Stdlib::Absolutepath $manifests_dir  = "/etc/puppetlabs/code/environments/${env}/site/site/manifests"
 ){
@@ -22,13 +22,13 @@ class simpsetup::site_module(
   file {
     default: * => $file_perms;
     "${manifests_dir}/tftpboot.pp":
-      content => template('simpsetup/site_module/manifests/tftpboot.pp.erb'),
+      content => template('simpsetup/site_profile/manifests/tftpboot.pp.erb'),
     ;
     "${manifests_dir}/workstations.pp":
-      content => template('simpsetup/site_module/manifests/workstations.pp.erb'),
+      content => template('simpsetup/site_profile/manifests/workstations.pp.erb'),
     ;
     "${manifests_dir}/wsmodules.pp":
-      content => template('simpsetup/site_module/manifests/wsmodules.pp.erb'),
+      content => template('simpsetup/site_profile/manifests/wsmodules.pp.erb'),
     ;
   }
 }
