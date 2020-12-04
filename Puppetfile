@@ -8,5 +8,7 @@ mod 'nwops/debug', '0.2.0'
 mod 'format',
   git: 'https://github.com/voxpupuli/puppet-format.git',
   ref: '6f1d387e14af9d7a92ed163692574506cc271860'
-mod 'puppetlabs/ruby_task_helper', '0.5.1'
 mod 'puppetlabs/stdlib', '6.5.0'
+mod 'puppetlabs/concat', '6.3.0'
+mod 'puppetlabs/ruby_task_helper', '0.5.1'
+mod 'puppetlabs/translate', '2.2.0'

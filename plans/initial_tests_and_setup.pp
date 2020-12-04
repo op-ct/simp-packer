@@ -27,12 +27,9 @@ plan simp_packer::initial_tests_and_setup(
   #   - pull data from hiera
   #   - edit with this run's settings (possibly from Hiera)
   #   - probably create it from hiera data
-  apply( $puppetserver, {'_description' => 'Set up root umask' }){
-    class{ 'simp_setup::root_umask': umask => $umask }
-  }
   upload_file("${local_simp_conf_file}", '/var/local/simp/simp_conf.yaml', $puppetserver)
   run_command(
-    "umask $umask; echo \"umask: $(umask)\"; simp config -a /var/local/simp/simp_conf.yaml",
+    "umask $umask; simp config -a /var/local/simp/simp_conf.yaml",
     $puppetserver,
     'Run simp config',
   )
@@ -43,7 +40,6 @@ plan simp_packer::initial_tests_and_setup(
     include 'simp_setup::puppet_environment_dirs'
     include 'simp_setup::hiera'
   }
-  upload_file("${pwd}/puppet/modules/simpsetup", "${pup_env_dir}/site/simpsetup", $puppetserver)
   run_command("/bin/chown --reference='${pup_env_dir}' -R '${pup_env_dir}'", $puppetserver )
   run_command("/bin/chcon --reference='${pup_env_dir}' -R '${pup_env_dir}'", $puppetserver )
 
