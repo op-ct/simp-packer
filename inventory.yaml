@@ -8,6 +8,10 @@ config:
     connect-timeout: 60
     interpreters:
       rb: /opt/puppetlabs/puppet/bin/ruby
+  local:
+    tmpdir:
+     _plugin: env_var
+     var: PWD
 
 features:
   - puppet-agent

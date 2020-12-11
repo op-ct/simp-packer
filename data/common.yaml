@@ -1,17 +1,79 @@
 ---
-packer_template::json_file: simp.json
-packer_template::min_packer_version: 1.6.5
-packer_template::structure:
+packer_build::template_key::json_file: simp.json
+packer_build::template_key::min_packer_version: 1.6.5
+packer_build::template_key::structure:
   - comments
   - min_packer_version
-  - comments
   - builders
-  - post-processors
   - provisioners
+  - post-processors
   - variables
 
-packer_template::builders:
-  - key1
-  - key2
-
 test_key: bbb
+
+packer_build::vars_json::big_sleep:
+packer_build::vars_json::bootcmd: simp
+packer_build::vars_json::disk_encrypt: false
+packer_build::vars_json::fips: 'fips=1'
+packer_build::vars_json::firmware: bios
+packer_build::vars_json::headless: true
+packer_build::vars_json::iso_url: https://download.simp-project.com/simp/ISO/SIMP-6.5.0-1.el7-CentOS-7.0-x86_64.iso
+packer_build::vars_json::mac_address: 'aabbcccc0007'
+packer_build::vars_json::nat_interface: 'enp0s3'
+packer_build::vars_json::new_password: 'P@ssw0rdP@ssw0rd'
+packer_build::vars_json::output_directory: '{{ pwd }}/OUTPUT/{{ isotime }}' # <-- TODO this string should be built into template.json so packer will interpolate these functions
+packer_build::vars_json::root_umask: '0077'
+packer_build::vars_json::simpenvironment: 'production'
+packer_build::vars_json::ssh_agent_auth: false
+packer_build::vars_json::vm_description: UNDEFINED # NOTE: 'SIMP6.5.0-CENTOS7-BIOS-FIPS'
+
+packer_build::settings::domain: 'simp.test'
+packer_build::settings::iso_dist_dir: '/net/ISO/Distribution_ISOs'
+packer_build::settings::host_only_gateway: '192.168.103.1'
+packer_build::settings::interface: 'enp0s8'
+packer_build::settings::puppetname: 'puppet'
+packer_build::settings::
+packer_build::settings::
+packer_build::settings::
+packer_build::settings::
+
+
+# FIXME: these shouldn't be in Hiera; they should constructed in Puppet logic
+#        from `packer_build::settings::` lookups
+packer_build::simp_conf::cli::network::gateway: "%{alias('packer_build::settings::host_only_gateway')}"
+packer_build::simp_conf::simp_options::ntpd::servers: "%{alias('packer_build::settings::host_only_gateway')}"
+packer_build::simp_conf::cli::network::interface: "%{alias('packer_build::settings::interface')}"
+packer_build::simp_conf::simp_options::dns::search: "%{alias('packer_build::settings::domain')}"
+packer_build::simp_conf::simp_options::puppet::server: PUPPET_FQDN
+packer_build::simp_conf::cli::network::hostname: PUPPET_FQDN
+packer_build::simp_conf::simp_options::puppet::ca: PUPPET_FQDN
+packer_build::simp_conf::simp_options::dns::search: DOMAIN_ARRAY # [ 'simp.test' ] <-- `domain` inside array
+packer_build::simp_conf::simp_options::ldap::base_dn: LDAP_BASE_DN
+# packer_build::simp_conf:: TODO: more to come (see lib/simp/packer/config/prepper.rb)
+
+
+
+lookup_options:
+  packer_build::template_key::structure:
+    merge:
+      strategy: first
+##  packer_build::template_key::comments:
+##    merge:
+##      strategy: hash
+##    knockout_prefix: --
+##  packer_build::template_key::builders:
+##    merge:
+##      strategy: first
+##    knockout_prefix: --
+##  packer_build::template_key::provisioners:
+##    merge:
+##      strategy: deep
+##    knockout_prefix: --
+##  packer_build::template_key::post_processors:
+##    merge:
+##      strategy: deep
+##    knockout_prefix: --
+  packer_build::template_key::variables:
+    merge:
+      strategy: hash
+    knockout_prefix: --
