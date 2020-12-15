@@ -1,4 +1,5 @@
 ---
 
-test_key: bbb
-
+test_key: '"bbb"'
+packer_build::template_key::json_file: simp.json
+packer_build::template_key::min_packer_version: 1.6.5

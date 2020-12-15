@@ -49,9 +49,21 @@ hierarchy:
 #      - "common.hocon"
 
 plan_hierarchy:
+  - name: "Nested YAML Lookup"
+    lookup_key: 'nested_lookup::yaml_key'
+    paths:
+      - "box/%{box}/build_type/%{build_type}.pp.yaml"
+      - "box/%{box}/template_key/%{template_key}.pp.yaml"
+      - "box/%{box}.pp.yaml"
+      - "plan_common.pp.yaml"
+    options:
+      hiera_interpolation: true
   - name: "YAML backend"
     data_hash: yaml_data
     paths:
+      - "box/%{box}/build_type/%{build_type}.yaml"
+      - "box/%{box}/template_key/%{template_key}.yaml"
+      - "box/%{box}.yaml"
       - "plan_common.yaml"
       - "common.yaml"
 #  - name: "JSON backend"

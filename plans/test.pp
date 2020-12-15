@@ -10,6 +10,11 @@ plan simp_packer::test(
     $build_type = 'simp_iso_to_vagrant_box'
 
     $template_keys = lookup('packer_build::template_key::structure')
+
+    # Construct a packer template hash by looking up each section in
+    # packer_build::template_key::structure
+    #
+    # TODO - recursive / subsection value lookups
     $h = $template_keys.reduce({}) |$m0, $k| {
        $v = lookup( "packer_build::template_key::${k}", {'default_value' => Undef})
        if $k == 'comments' {
@@ -18,6 +23,12 @@ plan simp_packer::test(
          $m0.merge( Hash([ $k, $v ]) )
        }
     }
+
+    # write results to a file for packer to consume
+    # TODO There will be several files:
+    #   - template.json
+    #   - vars.json
+    #   - simp_conf.yaml (an uploaded file)
     file{ "$tmp_file": content => to_yaml($h) }
   }
   $y = parseyaml(file::read($tmp_file))
