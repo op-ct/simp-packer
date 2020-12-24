@@ -48,14 +48,23 @@ hierarchy:
 #      - "%{::template_key}.hocon"
 #      - "common.hocon"
 
+# box:
+#    Box Role from roadmap
+#    e.g., `simp-server`, `simp-client`, `linux-min`, `simp-server-preconfig`
+#
+# build_type:
+#    - simp_iso_to_vagrant_box
+#
+# template_key:
+#
 plan_hierarchy:
-  - name: "Nested YAML Lookup"
+  - name: "Nested YAML Lookups"
     lookup_key: 'nested_lookup::yaml_key'
     paths:
-      - "box/%{box}/build_type/%{build_type}.pp.yaml"
-      - "box/%{box}/template_key/%{template_key}.pp.yaml"
-      - "box/%{box}.pp.yaml"
-      - "plan_common.pp.yaml"
+      - "box/%{box}/build_type/%{build_type}.nested.yaml"
+      - "box/%{box}/template_key/%{template_key}.nested.yaml"
+      - "box/%{box}.nested.yaml"
+      - "plan_common.nested.yaml"
     options:
       hiera_interpolation: true
   - name: "YAML backend"

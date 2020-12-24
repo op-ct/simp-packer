@@ -1,37 +1,37 @@
 ---
 test_key: cccc
 
-packer_build::template_key::json_file: simp.json
-packer_build::template_key::min_packer_version: 1.6.5
-packer_build::template_key::structure:
-  - comments
-  - min_packer_version
-  - builders
-  - provisioners
-  - post-processors
-  - variables
+packer_build::template::key::json_file: simp.json
+packer_build::template::key::min_packer_version: 1.6.5
+####packer_build::packer_template::structure:
+####  - comments
+####  - min_packer_version
+####  - builders
+####  - provisioners
+####  - post-processors
+####  - variables
 
 lookup_options:
-  packer_build::template_key::structure:
+  packer_build::packer_template::keys:
     merge:
       strategy: first
-##  packer_build::template_key::comments:
-##    merge:
-##      strategy: hash
-##    knockout_prefix: --
-##  packer_build::template_key::builders:
+  packer_build::template::key::comments:
+    merge:
+      strategy: hash
+    knockout_prefix: --
+##  packer_build::template::key::builders:
 ##    merge:
 ##      strategy: first
 ##    knockout_prefix: --
-##  packer_build::template_key::provisioners:
+##  packer_build::template::key::provisioners:
 ##    merge:
 ##      strategy: deep
 ##    knockout_prefix: --
-##  packer_build::template_key::post_processors:
+##  packer_build::template::key::post_processors:
 ##    merge:
 ##      strategy: deep
 ##    knockout_prefix: --
-  packer_build::template_key::variables:
+  packer_build::template::key::variables:
     merge:
       strategy: hash
     knockout_prefix: --

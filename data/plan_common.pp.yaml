@@ -1,21 +1,3 @@
 ---
 
 test_key: '"ddd"'
-packer_build::template_key::structure:
-  '@@MERGE_KEYS[comments]': "%{alias('packer_build::template_key::comments')}"
-  'min_packer_version':     "%{alias('packer_build::template_key::min_packer_version')}"
-  'builders':               "%{alias('packer_build::template_key::builders')}"
-  'provisioners':           "%{alias('packer_build::template_key::provisioners')}"
-  'post-processors':        "%{alias('packer_build::template_key::post-processors')}"
-  'variables':              "%{alias('packer_build::template_key::variables')}"
-
-packer_build::template_data: |
-  alias('packer_build::template_key::structure').reduce({}) |$m0, $k| {
-     $v = alias( "packer_build::template_key::${k}", {'default_value' => Undef})
-     if $k == 'comments' {
-       $m0.merge( $v.map |$k2, $v2| { Hash( [$k2, $v2] ) }.reduce({}) |$m3,$v3| { $m3.merge($v3) } )
-     } else {
-       $m0.merge( Hash([ $k, $v ]) )
-     }
-  }
-

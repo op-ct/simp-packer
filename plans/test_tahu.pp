@@ -1,42 +1,21 @@
 plan simp_packer::test_tahu(
- TargetSpec $targets            = get_targets('localhost'),
- Stdlib::Absolutepath $pwd      = system::env('PWD'),
- Stdlib::Absolutepath $tmp_file = "${pwd}/tmp_file.${system::env('$$')}",
+ TargetSpec $targets                   = get_targets('localhost'),
+ Stdlib::Absolutepath $pwd             = system::env('PWD'),
+ Stdlib::Absolutepath $tmp_file        = "${pwd}/tmp_file.${system::env('$$')}",
+ Optional[String[1]]     $box          = 'simp-server',
+ Optional[String[1]]     $build_type   = 'simp_iso_to_vagrant_box',
+ Optional[String[1]]     $template_key = undef,
+ String[1] $template_filename          = lookup('packer_build::template::file_name'),
+ Hash $template_comments_hash          = lookup('packer_build::template::comments'),
+ Hash $template_keys_hash              = lookup('packer_build::template::keys'),
 ){
   out::message( '==== begin plan' )
 
-  $box = 'simp-server'
-  $build_type = 'simp_iso_to_vagrant_box'
-  $template_key = undef
-  $a = lookup('packer_build::template_key::structure')
-  file::write("${pwd}/tmp.json", to_json_pretty($a))
-###  apply('localhost'){
-###    $box        = 'simp-server'
-###    $build_type = 'simp_iso_to_vagrant_box'
-###
-###    $template_keys = lookup('packer_build::template_key::structure')
-###
-###    # Construct a packer template hash by looking up each section in
-###    # packer_build::template_key::structure
-###    #
-###    # TODO - recursive / subsection value lookups
-###    $h = $template_keys.reduce({}) |$m0, $k| {
-###       $v = lookup( "packer_build::template_key::${k}", {'default_value' => Undef})
-###       if $k == 'comments' {
-###         $m0.merge( $v.map |$k2, $v2| { Hash( [$k2, $v2] ) }.reduce({}) |$m3,$v3| { $m3.merge($v3) } )
-###       } else {
-###         $m0.merge( Hash([ $k, $v ]) )
-###       }
-###    }
-###
-###    # write results to a file for packer to consume
-###    # TODO There will be several files:
-###    #   - template.json
-###    #   - vars.json
-###    #   - simp_conf.yaml (an uploaded file)
-###    file{ "$tmp_file": content => to_yaml($h) }
-###  }
-###  $y = parseyaml(file::read($tmp_file))
-  debug::break()
+  # variables for Hiera lookup in plan_hierarchy
+  $packer_template_hash   = $template_comments_hash.merge($template_keys_hash)
+
+  $packer_template_json = to_json_pretty($packer_template_hash)
+  file::write("${pwd}/${template_filename}", $packer_template_json)
+
   out::message( '==== finish plan' )
 }

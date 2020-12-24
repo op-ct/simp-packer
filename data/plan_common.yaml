@@ -1,5 +1,23 @@
 ---
 
 test_key: '"bbb"'
-packer_build::template_key::json_file: simp.json
-packer_build::template_key::min_packer_version: 1.6.5
+packer_build::template::file_name: simp.json
+packer_build::template::key::min_packer_version: 1.6.5
+
+packer_build::template::comments: {}
+
+packer_build::template::keys:
+  'min_packer_version':     "%{alias('packer_build::template::key::min_packer_version')}"
+  'builders':               "%{alias('packer_build::template::key::builders')}"
+  'provisioners':           "%{alias('packer_build::template::key::provisioners')}"
+  'post-processors':        "%{alias('packer_build::template::key::post-processors')}"
+  'variables':              "%{alias('packer_build::template::key::variables')}"
+
+packer_build::template::key::variables:
+  output_directory: "{{ pwd }}/OUTPUT/{{ isotime }}"
+  postprocess_output: "{{ pwd }}/POSTPROCESS_OUTPUT/{{ isotime }}"
+  ssh_agent_auth: 'true'
+  vagrant_password: vagrant
+  vrdp_bind_address: 0.0.0.0
+  vrdp_port_min: '5950'
+  vrdp_port_max: '5959'
