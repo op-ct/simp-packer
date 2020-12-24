@@ -58,15 +58,15 @@ hierarchy:
 # template_key:
 #
 plan_hierarchy:
-  - name: "Nested YAML Lookups"
-    lookup_key: 'nested_lookup::yaml_key'
-    paths:
-      - "box/%{box}/build_type/%{build_type}.nested.yaml"
-      - "box/%{box}/template_key/%{template_key}.nested.yaml"
-      - "box/%{box}.nested.yaml"
-      - "plan_common.nested.yaml"
-    options:
-      hiera_interpolation: true
+  ###  - name: "Nested YAML Lookups"
+  ###    lookup_key: 'nested_lookup::yaml_key'
+  ###    paths:
+  ###      - "box/%{box}/build_type/%{build_type}.nested.yaml"
+  ###      - "box/%{box}/template_key/%{template_key}.nested.yaml"
+  ###      - "box/%{box}.nested.yaml"
+  ###      - "plan_common.nested.yaml"
+  ###    options:
+  ###      hiera_interpolation: true
   - name: "YAML backend"
     data_hash: yaml_data
     paths:

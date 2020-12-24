@@ -1,23 +1,122 @@
 ---
+packer_build::settings::domain: 'simp.test'
+packer_build::settings::iso_dist_dir: '/net/ISO/Distribution_ISOs'
+packer_build::settings::host_only_gateway: '192.168.103.1'
+packer_build::settings::interface: 'enp0s8'
+packer_build::settings::puppetname: 'puppet'
+packer_build::settings::nat_interface: 'enp0s3'
+packer_build::settings::bootcmd:                  # NOTE: MUST be defined by box
+packer_build::settings::disk_encrypt: false
+packer_build::settings::fips: 'fips=1'
+packer_build::settings::firmware: bios
+packer_build::settings::headless: true
+packer_build::settings::iso_url: https://download.simp-project.com/simp/ISO/SIMP-6.5.0-1.el7-CentOS-7.0-x86_64.iso
+packer_build::settings::mac_address: 'aabbcccc0007'
+packer_build::settings::nat_interface: 'enp0s3'
+packer_build::settings::new_password: 'P@ssw0rdP@ssw0rd'
+packer_build::settings::root_umask: '0077'
+packer_build::settings::simpenvironment: 'production'
+packer_build::settings::ssh_agent_auth: false
+packer_build::settings::disk_size: 70000
 
-test_key: '"bbb"'
+
 packer_build::template::file_name: simp.json
-packer_build::template::key::min_packer_version: 1.6.5
 
-packer_build::template::comments: {}
-
+# A Packer template is a JSON object that has a set of keys configuring various
+# components of Packer.
+#
+#   https://www.packer.io/docs/templates#template-structure
+#
 packer_build::template::keys:
   'min_packer_version':     "%{alias('packer_build::template::key::min_packer_version')}"
   'builders':               "%{alias('packer_build::template::key::builders')}"
   'provisioners':           "%{alias('packer_build::template::key::provisioners')}"
-  'post-processors':        "%{alias('packer_build::template::key::post-processors')}"
+  'post-processors':        "%{alias('packer_build::template::key::post_processors')}"
   'variables':              "%{alias('packer_build::template::key::variables')}"
 
+
+packer_build::template::key::min_packer_version: 1.6.5
+packer_build::template::key::builders: []
+packer_build::template::key::provisioners: []
+packer_build::template::key::post_processors: []
+
+# Template User variables
+#
+#   https://www.packer.io/docs/templates/user-variables.html
+#
 packer_build::template::key::variables:
   output_directory: "{{ pwd }}/OUTPUT/{{ isotime }}"
   postprocess_output: "{{ pwd }}/POSTPROCESS_OUTPUT/{{ isotime }}"
-  ssh_agent_auth: 'true'
+  ssh_agent_auth: "%{lookup('packer_build::settings::ssh_agent_auth')}"
   vagrant_password: vagrant
   vrdp_bind_address: 0.0.0.0
   vrdp_port_min: '5950'
   vrdp_port_max: '5959'
+
+#
+# https://www.packer.io/docs/templates#comments
+#
+packer_build::template::comments: {}
+
+
+
+lookup_options:
+  packer_build::packer_template::keys:
+    merge:
+      strategy: first
+  packer_build::template::comments:
+    merge:
+      strategy: hash
+    knockout_prefix: --
+##  packer_build::template::key::builders:
+##    merge:
+##      strategy: first
+##    knockout_prefix: --
+##  packer_build::template::key::provisioners:
+##    merge:
+##      strategy: deep
+##    knockout_prefix: --
+##  packer_build::template::key::post_processors:
+##    merge:
+##      strategy: deep
+##    knockout_prefix: --
+  packer_build::template::key::variables:
+    merge:
+      strategy: hash
+    knockout_prefix: --
+
+
+# FIXME: these shouldn't be in Hiera; they should constructed in Puppet logic
+#        from `packer_build::settings::` lookups
+packer_build::vars_json::big_sleep:
+packer_build::vars_json::bootcmd: "%{alias('packer_build::settings::bootcmd')}"
+packer_build::vars_json::disk_encrypt: "%{alias('packer_build::settings::disk_encrypt')}"
+packer_build::vars_json::fips: "%{alias('packer_build::settings::fips')}"
+packer_build::vars_json::firmware: "%{alias('packer_build::settings::firmware')}"
+packer_build::vars_json::headless: "%{alias('packer_build::settings::headless')}"
+packer_build::vars_json::iso_url: "%{alias('packer_build::settings::iso_url')}"
+packer_build::vars_json::mac_address: "%{alias('packer_build::settings::mac_address')}"
+packer_build::vars_json::nat_interface: "%{alias('packer_build::settings::nat_interface')}"
+packer_build::vars_json::new_password: "%{alias('packer_build::settings::new_password')}"
+packer_build::vars_json::root_umask: "%{alias('packer_build::settings::root_umask')}"
+packer_build::vars_json::simpenvironment: "%{alias('packer_build::settings::simpenvironment')}"
+packer_build::vars_json::ssh_agent_auth: "%{alias('packer_build::settings::ssh_agent_auth')}"
+packer_build::vars_json::vm_description: "%{alias('packer_build::settings::vm_description')}"
+packer_build::settings::vm_description: UNDEFINED # NOTE: 'SIMP6.5.0-CENTOS7-BIOS-FIPS'
+
+
+# FIXME: these shouldn't be in Hiera; they should constructed in Puppet logic
+#        from `packer_build::settings::` lookups
+packer_build::simp_conf::cli::network::gateway: "%{alias('packer_build::settings::host_only_gateway')}"
+packer_build::simp_conf::simp_options::ntpd::servers: "%{alias('packer_build::settings::host_only_gateway')}"
+packer_build::simp_conf::cli::network::interface: "%{alias('packer_build::settings::interface')}"
+packer_build::simp_conf::simp_options::dns::search: "%{alias('packer_build::settings::domain')}"
+packer_build::simp_conf::simp_options::puppet::server: PUPPET_FQDN
+packer_build::simp_conf::cli::network::hostname: PUPPET_FQDN
+packer_build::simp_conf::simp_options::puppet::ca: PUPPET_FQDN
+packer_build::simp_conf::simp_options::dns::search: DOMAIN_ARRAY # [ 'simp.test' ] <-- `domain` inside array
+packer_build::simp_conf::simp_options::ldap::base_dn: LDAP_BASE_DN
+# packer_build::simp_conf:: TODO: more to come (see lib/simp/packer/config/prepper.rb)
+
+
+test_key: '"bbb"'
